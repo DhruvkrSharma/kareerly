@@ -1,9 +1,16 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const PUBLIC_PATHS = ['/auth/login', '/auth/callback']
+const PUBLIC_PATHS = ['/auth/login', '/auth/callback', '/api']
 
 export async function proxy(request: NextRequest) {
+  const path = request.nextUrl.pathname
+
+  // Let all API routes pass through without auth check
+  if (path.startsWith('/api')) {
+    return NextResponse.next({ request: { headers: request.headers } })
+  }
+
   let response = NextResponse.next({
     request: { headers: request.headers },
   })
@@ -18,16 +25,12 @@ export async function proxy(request: NextRequest) {
         },
         set(name: string, value: string, options: CookieOptions) {
           request.cookies.set({ name, value, ...options })
-          response = NextResponse.next({
-            request: { headers: request.headers },
-          })
+          response = NextResponse.next({ request: { headers: request.headers } })
           response.cookies.set({ name, value, ...options })
         },
         remove(name: string, options: CookieOptions) {
           request.cookies.set({ name, value: '', ...options })
-          response = NextResponse.next({
-            request: { headers: request.headers },
-          })
+          response = NextResponse.next({ request: { headers: request.headers } })
           response.cookies.set({ name, value: '', ...options })
         },
       },
@@ -35,7 +38,6 @@ export async function proxy(request: NextRequest) {
   )
 
   const { data: { user } } = await supabase.auth.getUser()
-  const path = request.nextUrl.pathname
 
   if (!user && !PUBLIC_PATHS.some(p => path.startsWith(p))) {
     return NextResponse.redirect(new URL('/auth/login', request.url))
