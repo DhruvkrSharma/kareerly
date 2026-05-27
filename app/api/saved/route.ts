@@ -41,6 +41,7 @@ export async function GET() {
           skills_required,
           companies (
             name,
+            slug,
             logo_url
           )
         )
@@ -64,6 +65,7 @@ export async function GET() {
         job_id: job?.id,
         title: job?.title || 'Unknown Role',
         company_name: company?.name || 'Unknown Company',
+        company_slug: company?.slug || '',
         company_logo: company?.logo_url || null,
         location: job?.location || 'India',
         remote_ok: job?.remote_ok || false,

@@ -12,6 +12,7 @@ interface KanbanCard {
   job_id: number
   title: string
   company_name: string
+  company_slug: string
   company_logo: string | null
   location: string
   remote_ok: boolean
@@ -32,6 +33,7 @@ const MOCK_CARDS: KanbanCard[] = [
     job_id: 201,
     title: 'Senior Frontend Engineer',
     company_name: 'TechCorp Inc.',
+    company_slug: 'techcorp',
     company_logo: null,
     location: 'Bengaluru · Hybrid',
     remote_ok: false,
@@ -48,6 +50,7 @@ const MOCK_CARDS: KanbanCard[] = [
     job_id: 202,
     title: 'Product Designer',
     company_name: 'Innovate Studio',
+    company_slug: 'innovate',
     company_logo: null,
     location: 'Remote',
     remote_ok: true,
@@ -64,6 +67,7 @@ const MOCK_CARDS: KanbanCard[] = [
     job_id: 203,
     title: 'Full Stack Developer',
     company_name: 'Global FinTech',
+    company_slug: 'global-fintech',
     company_logo: null,
     location: 'Mumbai',
     remote_ok: false,
@@ -263,9 +267,12 @@ export default function KanbanPage() {
                       >
                         <div>
                           <div className="flex justify-between items-start mb-2.5">
-                            <span className="text-xs font-mono font-bold text-on-surface-variant/70 uppercase">
+                            <button
+                              onClick={() => router.push(`/feed/company/${card.company_slug}`)}
+                              className="text-xs font-mono font-bold text-on-surface-variant/70 uppercase hover:text-primary transition-colors cursor-pointer text-left"
+                            >
                               {card.company_name}
-                            </span>
+                            </button>
                             <span 
                               className="badge text-[10px] px-1.5 py-0.5"
                               style={{ 
