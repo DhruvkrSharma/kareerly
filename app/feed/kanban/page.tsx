@@ -166,6 +166,15 @@ export default function KanbanPage() {
   async function generateResume(jobId: number, companyName: string) {
     setTailoringJobId(jobId)
     setTailoredContent(null)
+    
+    // Check localStorage first
+    const localKey = `kareerly-resume-${jobId}`
+    const cached = localStorage.getItem(localKey)
+    if (cached) {
+      setTailoredContent(cached)
+      return
+    }
+
     setIsTailoring(true)
     try {
       const res = await fetch('/api/resume/tailor', {
@@ -175,7 +184,9 @@ export default function KanbanPage() {
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Failed to generate')
+      
       setTailoredContent(json.data)
+      localStorage.setItem(localKey, json.data)
       showToast(`Tailored resume for ${companyName}!`, 'success')
     } catch (e: any) {
       showToast(e.message, 'info')

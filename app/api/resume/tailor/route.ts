@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
     
     // 4. Generate Resume
     const prompt = `
-You are an expert technical resume writer. Your task is to tailor a candidate's resume summary and experience bullet points specifically for a target job.
+You are an expert technical resume writer and ATS Analyzer. Your task is to tailor a candidate's resume specifically for a target job.
 
 Candidate Profile:
 - Full Name: ${profile.full_name || 'Candidate'}
@@ -69,11 +69,12 @@ Target Job:
 - Skills Required: ${job.skills_required?.join(', ') || 'N/A'}
 - Description: ${job.description}
 
-Write a tailored resume section in professional Markdown format. It should include:
-1. A strong, 2-sentence Professional Summary highlighting their fit for the target job.
-2. 3-4 impactful bullet points (using the STAR method) that connect the candidate's skills to the job requirements.
+Write a tailored resume section in professional Markdown format. It must include:
+1. **ATS Match Analysis:** A brief 1-2 sentence analysis of how well the candidate matches the job, identifying any critical missing skills.
+2. **Professional Summary:** A strong, 2-sentence summary highlighting their fit for the target job.
+3. **Tailored Experience:** 3-4 impactful bullet points (using the STAR method) that connect the candidate's existing skills to the job requirements.
 
-Do not include contact info or formatting outside of the summary and bullets.
+Keep it highly actionable and optimized for ATS systems. Do not include contact info.
 `
 
     const chatCompletion = await groq.chat.completions.create({
@@ -82,27 +83,10 @@ Do not include contact info or formatting outside of the summary and bullets.
         { role: 'user', content: prompt }
       ],
       model: 'llama3-8b-8192',
-      temperature: 0.3,
+      temperature: 0.2, // Lower temperature for more analytical/factual ATS output
     })
 
     const markdownContent = chatCompletion.choices[0].message.content
-
-    // 5. Save to tailored_resumes table
-    const { data: savedResume, error: saveError } = await supabase
-      .from('tailored_resumes')
-      .upsert({
-        user_id: user.id,
-        job_id: job.id,
-        content: markdownContent,
-        created_at: new Date().toISOString()
-      }, { onConflict: 'user_id,job_id' })
-      .select()
-      .single()
-
-    if (saveError) {
-      console.error('Failed to save resume:', saveError)
-      // If table doesn't exist, we can just return the generated content anyway
-    }
 
     return NextResponse.json({ data: markdownContent })
 
