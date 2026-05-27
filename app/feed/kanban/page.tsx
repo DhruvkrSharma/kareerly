@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, MapPin, ExternalLink, Calendar, ArrowRight, Check } from 'lucide-react'
+import { Plus, MapPin, ExternalLink, Calendar, ArrowRight, Check, Wand2, X } from 'lucide-react'
 import { Toast } from '@/components/ui/Navigation'
 import { useRouter } from 'next/navigation'
+import ReactMarkdown from 'react-markdown'
 
 interface KanbanCard {
   rec_id: number
@@ -82,6 +83,12 @@ export default function KanbanPage() {
   // Local stage overrides: maps rec_id -> ColumnId
   const [stageOverrides, setStageOverrides] = useState<Record<number, ColumnId>>({})
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null)
+  
+  // Resume Tailoring States
+  const [tailoringJobId, setTailoringJobId] = useState<number | null>(null)
+  const [tailoredContent, setTailoredContent] = useState<string | null>(null)
+  const [isTailoring, setIsTailoring] = useState(false)
+  
   const router = useRouter()
 
   function showToast(message: string, type: 'success' | 'info' = 'success') {
@@ -149,6 +156,28 @@ export default function KanbanPage() {
       } catch (err) {
         console.error(err)
       }
+    }
+  }
+
+  async function generateResume(jobId: number, companyName: string) {
+    setTailoringJobId(jobId)
+    setTailoredContent(null)
+    setIsTailoring(true)
+    try {
+      const res = await fetch('/api/resume/tailor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ job_id: jobId })
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Failed to generate')
+      setTailoredContent(json.data)
+      showToast(`Tailored resume for ${companyName}!`, 'success')
+    } catch (e: any) {
+      showToast(e.message, 'info')
+      setTailoringJobId(null)
+    } finally {
+      setIsTailoring(false)
     }
   }
 
@@ -272,12 +301,20 @@ export default function KanbanPage() {
 
                         {/* Interactive flow controls */}
                         <div className="flex items-center justify-between border-t border-outline-variant/30 mt-4 pt-3">
-                          <button
-                            onClick={() => window.open(card.apply_url, '_blank')}
-                            className="p-1.5 text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1 text-xs font-mono font-bold"
-                          >
-                            Apply <ExternalLink className="w-3 h-3" />
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => window.open(card.apply_url, '_blank')}
+                              className="p-1.5 text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1 text-xs font-mono font-bold"
+                            >
+                              Apply <ExternalLink className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={() => generateResume(card.job_id, card.company_name)}
+                              className="p-1.5 text-secondary hover:text-secondary-container-on transition-colors flex items-center gap-1 text-xs font-mono font-bold"
+                            >
+                              <Wand2 className="w-3 h-3" /> Tailor
+                            </button>
+                          </div>
 
                           {/* Move stage control */}
                           <div className="flex gap-1">
@@ -346,6 +383,63 @@ export default function KanbanPage() {
             transition={{ duration: 0.2 }}
           >
             <Toast message={toast.message} type={toast.type} />
+          </motion.div>
+        )}
+        
+        {/* Tailor Resume Modal */}
+        {tailoringJobId && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              className="bg-surface w-full max-w-2xl max-h-[85vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-outline-variant/50"
+            >
+              <div className="flex items-center justify-between p-6 border-b border-outline-variant/30 bg-surface-container-lowest">
+                <h2 className="text-xl font-display font-black text-on-surface flex items-center gap-2">
+                  <Wand2 className="text-primary w-5 h-5" /> AI Tailored Resume
+                </h2>
+                <button 
+                  onClick={() => { setTailoringJobId(null); setTailoredContent(null) }}
+                  className="p-2 hover:bg-surface-container rounded-full text-on-surface-variant transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="p-6 overflow-y-auto flex-1 bg-surface">
+                {isTailoring ? (
+                  <div className="flex flex-col items-center justify-center h-48 space-y-4">
+                    <div className="w-10 h-10 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+                    <p className="text-sm font-mono text-on-surface-variant animate-pulse">
+                      Analyzing profile and rewriting bullets...
+                    </p>
+                  </div>
+                ) : tailoredContent ? (
+                  <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none font-sans">
+                    <ReactMarkdown>{tailoredContent}</ReactMarkdown>
+                  </div>
+                ) : null}
+              </div>
+              
+              <div className="p-4 border-t border-outline-variant/30 bg-surface-container-lowest flex justify-end">
+                <button
+                  onClick={() => {
+                    if (tailoredContent) navigator.clipboard.writeText(tailoredContent)
+                    showToast('Copied to clipboard', 'info')
+                  }}
+                  disabled={!tailoredContent}
+                  className="btn-primary"
+                >
+                  Copy to Clipboard
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
