@@ -1,17 +1,24 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Eye, EyeOff } from 'lucide-react'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
+  const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
-  const [mode, setMode] = useState<'login' | 'signup'>('login')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
+  const [showPass, setShowPass] = useState(false)
+  const [mode, setMode]         = useState<'login' | 'signup'>('login')
+  const [loading, setLoading]   = useState(false)
+  const [error, setError]       = useState<string | null>(null)
+  const [message, setMessage]   = useState<string | null>(null)
   const router = useRouter()
+
+  useEffect(() => {
+    document.documentElement.classList.add('dark')
+  }, [])
 
   async function handleSubmit() {
     if (!email.trim() || !password.trim()) {
@@ -41,171 +48,211 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#030712',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '24px',
-      fontFamily: 'system-ui, sans-serif'
-    }}>
-      <div style={{
-        width: '100%',
-        maxWidth: '420px',
-        background: '#111827',
-        border: '1px solid #1f2937',
-        borderRadius: '20px',
-        padding: '36px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '24px'
-      }}>
-        <div>
-          <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#fff', margin: 0 }}>
-            Kareerly
+    <div
+      className="min-h-screen flex"
+      style={{ background: 'var(--surface)' }}
+    >
+      {/* Left panel — quote & branding */}
+      <div
+        className="hidden md:flex flex-col justify-between flex-1 p-12 relative overflow-hidden"
+        style={{ background: 'var(--surface-container-lowest)' }}
+      >
+        {/* Background glow */}
+        <div
+          className="absolute top-1/4 left-1/3 w-[500px] h-[500px] rounded-full opacity-10 blur-[120px] pointer-events-none"
+          style={{ background: 'var(--primary-container)' }}
+        />
+        <div
+          className="absolute bottom-0 right-0 w-[300px] h-[300px] rounded-full opacity-5 blur-[80px] pointer-events-none"
+          style={{ background: 'var(--secondary)' }}
+        />
+
+        {/* Logo */}
+        <div className="relative z-10">
+          <h1 className="font-display text-xl font-bold" style={{ color: 'var(--on-surface)' }}>
+            <span style={{ color: 'var(--primary-container)' }}>K</span>areerly
           </h1>
-          <p style={{ fontSize: '14px', color: '#6b7280', marginTop: '4px' }}>
-            AI-powered career discovery for Indian tech
+        </div>
+
+        {/* Quote */}
+        <div className="relative z-10 max-w-md">
+          <blockquote
+            className="text-2xl font-display font-bold leading-relaxed"
+            style={{ color: 'var(--on-surface)' }}
+          >
+            &ldquo;Your career is not a ladder; it&apos;s a jungle gym. Find the right path and accelerate your growth.&rdquo;
+          </blockquote>
+          <p className="text-sm mt-4 font-display font-semibold" style={{ color: 'var(--primary-container)' }}>
+            The Future of Work
           </p>
         </div>
 
-        {/* Tabs */}
-        <div style={{
-          display: 'flex',
-          background: '#1f2937',
-          borderRadius: '12px',
-          padding: '4px',
-          gap: '4px'
-        }}>
-          <button
-            onClick={() => { setMode('login'); setError(null); setMessage(null) }}
-            style={{
-              flex: 1,
-              padding: '10px',
-              borderRadius: '8px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500',
-              background: mode === 'login' ? '#111827' : 'transparent',
-              color: mode === 'login' ? '#fff' : '#6b7280',
-              transition: 'all 0.2s'
-            }}
-          >
-            Sign in
-          </button>
-          <button
-            onClick={() => { setMode('signup'); setError(null); setMessage(null) }}
-            style={{
-              flex: 1,
-              padding: '10px',
-              borderRadius: '8px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500',
-              background: mode === 'signup' ? '#111827' : 'transparent',
-              color: mode === 'signup' ? '#fff' : '#6b7280',
-              transition: 'all 0.2s'
-            }}
-          >
-            Sign up
-          </button>
+        {/* Footer */}
+        <div className="relative z-10 flex gap-4 text-xs" style={{ color: 'var(--on-surface-variant)' }}>
+          <button className="hover:text-on-surface transition-colors">Privacy</button>
+          <button className="hover:text-on-surface transition-colors">Terms</button>
         </div>
+      </div>
 
-        {/* Fields */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '12px', fontWeight: '500', color: '#9ca3af' }}>
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-              placeholder="you@example.com"
-              style={{
-                background: '#1f2937',
-                border: '1px solid #374151',
-                borderRadius: '12px',
-                padding: '12px 16px',
-                color: '#fff',
-                fontSize: '15px',
-                outline: 'none',
-                width: '100%',
-                boxSizing: 'border-box'
-              }}
-            />
+      {/* Right panel — form */}
+      <div className="flex-1 flex items-center justify-center p-6 md:p-12">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+          className="w-full max-w-sm"
+        >
+          {/* Mobile logo */}
+          <div className="md:hidden text-center mb-8">
+            <h1 className="font-display text-2xl font-bold" style={{ color: 'var(--on-surface)' }}>
+              <span style={{ color: 'var(--primary-container)' }}>K</span>areerly
+            </h1>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '12px', fontWeight: '500', color: '#9ca3af' }}>
-              Password
-            </label>
-            <input
-              type="password"
-              value={email ? password : ''}
-              onChange={e => setPassword(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-              placeholder="••••••••"
-              style={{
-                background: '#1f2937',
-                border: '1px solid #374151',
-                borderRadius: '12px',
-                padding: '12px 16px',
-                color: '#fff',
-                fontSize: '15px',
-                outline: 'none',
-                width: '100%',
-                boxSizing: 'border-box'
-              }}
-            />
+          {/* Heading */}
+          <h2 className="text-headline-lg mb-2" style={{ color: 'var(--on-surface)' }}>
+            {mode === 'login' ? 'Welcome back' : 'Create account'}
+          </h2>
+          <p className="text-sm mb-8" style={{ color: 'var(--on-surface-variant)' }}>
+            {mode === 'login'
+              ? 'Sign in to continue your professional journey.'
+              : 'Start your AI-powered career discovery.'}
+          </p>
+
+          <div className="space-y-5">
+            {/* Email */}
+            <div className="space-y-1.5">
+              <label className="text-label-sm uppercase tracking-wider" style={{ color: 'var(--on-surface-variant)' }}>
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+                placeholder="you@example.com"
+                className="w-full rounded-xl px-4 py-3 text-sm outline-none border transition-colors"
+                style={{
+                  background: 'var(--surface-container)',
+                  borderColor: 'var(--outline-variant)',
+                  color: 'var(--on-surface)',
+                }}
+                onFocus={e => (e.target.style.borderColor = 'var(--primary-container)')}
+                onBlur={e => (e.target.style.borderColor = 'var(--outline-variant)')}
+              />
+            </div>
+
+            {/* Password */}
+            <div className="space-y-1.5">
+              <label className="text-label-sm uppercase tracking-wider" style={{ color: 'var(--on-surface-variant)' }}>
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPass ? 'text' : 'password'}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+                  placeholder="••••••••"
+                  className="w-full rounded-xl px-4 py-3 pr-12 text-sm outline-none border transition-colors"
+                  style={{
+                    background: 'var(--surface-container)',
+                    borderColor: 'var(--outline-variant)',
+                    color: 'var(--on-surface)',
+                  }}
+                  onFocus={e => (e.target.style.borderColor = 'var(--primary-container)')}
+                  onBlur={e => (e.target.style.borderColor = 'var(--outline-variant)')}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPass(!showPass)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-on-surface-variant hover:text-on-surface transition-colors"
+                >
+                  {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Forgot password */}
+            {mode === 'login' && (
+              <div className="text-right">
+                <button className="text-xs font-semibold transition-colors" style={{ color: 'var(--primary-container)' }}>
+                  Forgot password?
+                </button>
+              </div>
+            )}
+
+            {/* Error */}
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="px-4 py-3 rounded-xl border text-sm"
+                  style={{
+                    background: 'color-mix(in srgb, var(--error) 10%, transparent)',
+                    borderColor: 'color-mix(in srgb, var(--error) 30%, transparent)',
+                    color: 'var(--error)',
+                  }}
+                >
+                  {error}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Success */}
+            <AnimatePresence>
+              {message && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="px-4 py-3 rounded-xl border text-sm"
+                  style={{
+                    background: 'color-mix(in srgb, var(--tertiary) 10%, transparent)',
+                    borderColor: 'color-mix(in srgb, var(--tertiary) 30%, transparent)',
+                    color: 'var(--tertiary)',
+                  }}
+                >
+                  {message}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Submit */}
+            <button
+              onClick={handleSubmit}
+              disabled={loading}
+              className="btn-primary w-full justify-center text-base flex items-center gap-2"
+              style={{ opacity: loading ? 0.7 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}
+            >
+              {loading ? (
+                <>
+                  <div
+                    className="w-4 h-4 rounded-full border-2 animate-spin-slow"
+                    style={{ borderColor: 'transparent', borderTopColor: 'var(--on-primary-container)' }}
+                  />
+                  Please wait…
+                </>
+              ) : (
+                mode === 'login' ? 'Sign In' : 'Create Account'
+              )}
+            </button>
           </div>
 
-          {error && (
-            <div style={{
-              background: 'rgba(239,68,68,0.1)',
-              border: '1px solid rgba(239,68,68,0.2)',
-              borderRadius: '12px',
-              padding: '12px 16px'
-            }}>
-              <p style={{ color: '#f87171', fontSize: '13px', margin: 0 }}>{error}</p>
-            </div>
-          )}
-
-          {message && (
-            <div style={{
-              background: 'rgba(34,197,94,0.1)',
-              border: '1px solid rgba(34,197,94,0.2)',
-              borderRadius: '12px',
-              padding: '12px 16px'
-            }}>
-              <p style={{ color: '#4ade80', fontSize: '13px', margin: 0 }}>{message}</p>
-            </div>
-          )}
-
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            style={{
-              background: loading ? '#4338ca' : '#4f46e5',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '12px',
-              padding: '14px',
-              fontSize: '15px',
-              fontWeight: '600',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.7 : 1,
-              transition: 'all 0.2s',
-              marginTop: '4px'
-            }}
-          >
-            {loading ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}
-          </button>
-        </div>
+          {/* Toggle mode */}
+          <p className="text-center text-sm mt-8" style={{ color: 'var(--on-surface-variant)' }}>
+            {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
+            <button
+              onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(null); setMessage(null) }}
+              className="font-semibold transition-colors"
+              style={{ color: 'var(--primary-container)' }}
+            >
+              {mode === 'login' ? 'Sign up for free' : 'Sign in'}
+            </button>
+          </p>
+        </motion.div>
       </div>
     </div>
   )

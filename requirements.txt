@@ -1,0 +1,37 @@
+# ═══════════════════════════════════════════════════════════
+# Kareerly — Dependency Manifest
+# This is a Node.js/Next.js project. Dependencies are managed
+# via package.json + npm. This file is for reference only.
+# ═══════════════════════════════════════════════════════════
+
+# ── Runtime Dependencies ────────────────────────────────────
+next==15.3.3                    # React meta-framework (App Router, SSR, API routes)
+react==19.2.6                   # UI library
+react-dom==19.2.6               # React DOM renderer
+@supabase/ssr==0.10.3           # Supabase server-side auth helpers
+@supabase/supabase-js==2.106.1  # Supabase client SDK (auth, database, realtime)
+framer-motion==12.39.0          # Animation library (page transitions, swipe gestures)
+lucide-react==1.16.0            # Icon library (Sidebar, Kanban, Profile icons)
+
+# ── Dev Dependencies ────────────────────────────────────────
+typescript==5.x                 # TypeScript compiler
+tailwindcss==4.x                # Utility-first CSS framework
+@tailwindcss/postcss==4.x       # Tailwind PostCSS plugin
+eslint==9.x                     # JavaScript/TypeScript linter
+eslint-config-next==15.3.3      # Next.js ESLint rules
+@types/node==20.x               # Node.js type definitions
+@types/react==19.x              # React type definitions
+@types/react-dom==19.x          # React DOM type definitions
+
+# ── External Services ──────────────────────────────────────
+# Supabase (Auth + PostgreSQL + Realtime)
+#   NEXT_PUBLIC_SUPABASE_URL     — Project URL
+#   NEXT_PUBLIC_SUPABASE_ANON_KEY — Anonymous API key
+#   Configured in .env.local
+
+# ── Fonts (loaded via Google Fonts CDN) ─────────────────────
+# Sora           — Headlines, display text (geometric, futuristic)
+# Hanken Grotesk — Body copy, labels (highly legible at small sizes)
+
+# ── To install all dependencies ─────────────────────────────
+# npm install

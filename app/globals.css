@@ -1,26 +1,325 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
+/* ═══════════════════════════════════════════════════════════
+   KAREERLY BRAND IDENTITY — "Midnight & Amber"
+   Extracted from Stitch project 5624217228169749957
+   ═══════════════════════════════════════════════════════════ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Light mode */
+  --surface:                  #f4f6fb;
+  --surface-dim:              #e8eaf2;
+  --surface-bright:           #ffffff;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low:    #eef0f8;
+  --surface-container:        #e8eaf2;
+  --surface-container-high:   #e0e3ec;
+  --surface-container-highest:#d8dbe5;
+  --on-surface:               #0e1322;
+  --on-surface-variant:       #534434;
+  --inverse-surface:          #2b3040;
+  --inverse-on-surface:       #dee1f7;
+  --primary:                  #855300;
+  --primary-container:        #f59e0b;
+  --on-primary:               #ffffff;
+  --on-primary-container:     #613b00;
+  --inverse-primary:          #ffb95f;
+  --secondary:                #3131c0;
+  --on-secondary:             #ffffff;
+  --secondary-container:      #e1e0ff;
+  --on-secondary-container:   #07006c;
+  --tertiary:                 #006d33;
+  --on-tertiary:              #ffffff;
+  --tertiary-container:       #91f9ac;
+  --on-tertiary-container:    #00210b;
+  --outline:                  #a08e7a;
+  --outline-variant:          #d6c4b2;
+  --error:                    #ba1a1a;
+  --error-container:          #ffdad6;
+  --on-error:                 #ffffff;
+  --on-error-container:       #410002;
+  --surface-tint:             #855300;
+  --surface-variant:          #e8eaf2;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.dark {
+  --surface:                  #0e1322;
+  --surface-dim:              #0e1322;
+  --surface-bright:           #343949;
+  --surface-container-lowest: #090e1c;
+  --surface-container-low:    #161b2b;
+  --surface-container:        #1a1f2f;
+  --surface-container-high:   #25293a;
+  --surface-container-highest:#2f3445;
+  --on-surface:               #dee1f7;
+  --on-surface-variant:       #d8c3ad;
+  --inverse-surface:          #dee1f7;
+  --inverse-on-surface:       #2b3040;
+  --primary:                  #ffc174;
+  --primary-container:        #f59e0b;
+  --on-primary:               #472a00;
+  --on-primary-container:     #613b00;
+  --inverse-primary:          #855300;
+  --secondary:                #c0c1ff;
+  --on-secondary:             #1000a9;
+  --secondary-container:      #3131c0;
+  --on-secondary-container:   #b0b2ff;
+  --tertiary:                 #51e77b;
+  --on-tertiary:              #003915;
+  --tertiary-container:       #2bca62;
+  --on-tertiary-container:    #004f20;
+  --outline:                  #a08e7a;
+  --outline-variant:          #534434;
+  --error:                    #ffb4ab;
+  --error-container:          #93000a;
+  --on-error:                 #690005;
+  --on-error-container:       #ffdad6;
+  --surface-tint:             #ffb95f;
+  --surface-variant:          #2f3445;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ═══ Base ═══════════════════════════════════════════════── */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background-color: var(--surface);
+    color: var(--on-surface);
+    font-family: "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  ::selection {
+    background-color: var(--primary-container);
+    color: var(--on-primary-container);
+  }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--surface-container); }
+  ::-webkit-scrollbar-thumb {
+    background: var(--outline);
+    border-radius: 999px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ═══ Typography ═════════════════════════════════════════── */
+@layer components {
+  .font-display { font-family: "Sora", sans-serif !important; }
+  .font-body    { font-family: "Hanken Grotesk", sans-serif !important; }
+
+  .text-display-lg {
+    font-family: "Sora", sans-serif;
+    font-size: 48px; font-weight: 700;
+    line-height: 56px; letter-spacing: -0.02em;
+  }
+  .text-headline-lg {
+    font-family: "Sora", sans-serif;
+    font-size: 32px; font-weight: 700; line-height: 40px;
+  }
+  .text-headline-lg-mobile {
+    font-family: "Sora", sans-serif;
+    font-size: 28px; font-weight: 700; line-height: 36px;
+  }
+  .text-headline-md {
+    font-family: "Sora", sans-serif;
+    font-size: 24px; font-weight: 600; line-height: 32px;
+  }
+  .text-body-lg {
+    font-family: "Hanken Grotesch", sans-serif;
+    font-size: 18px; font-weight: 400; line-height: 28px;
+  }
+  .text-body-md {
+    font-family: "Hanken Grotesk", sans-serif;
+    font-size: 16px; font-weight: 400; line-height: 24px;
+  }
+  .text-label-md {
+    font-family: "Hanken Grotesk", sans-serif;
+    font-size: 14px; font-weight: 600;
+    line-height: 20px; letter-spacing: 0.01em;
+  }
+  .text-label-sm {
+    font-family: "Hanken Grotesk", sans-serif;
+    font-size: 12px; font-weight: 500;
+    line-height: 16px; letter-spacing: 0.02em;
+  }
+
+  /* ═══ Cards & Surfaces ═════════════════════════════════── */
+  .glass-card {
+    background-color: color-mix(in srgb, var(--surface-container) 80%, transparent);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--outline-variant);
+    border-radius: 1rem;
+  }
+  .glass-card-hover {
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .glass-card-hover:hover {
+    border-color: color-mix(in srgb, var(--primary) 50%, transparent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px color-mix(in srgb, var(--primary) 15%, transparent);
+  }
+  .solid-card {
+    background-color: var(--surface-container-low);
+    border: 1px solid var(--outline-variant);
+    border-radius: 1rem;
+  }
+
+  /* ═══ Badges ═══════════════════════════════════════════── */
+  .badge {
+    display: inline-flex; align-items: center;
+    padding: 0.25rem 0.75rem; border-radius: 999px;
+    font-family: "Hanken Grotesk", sans-serif;
+    font-size: 0.65rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+
+  /* ═══ Buttons ══════════════════════════════════════════── */
+  .btn-primary {
+    background-color: var(--primary-container);
+    color: var(--on-primary-container);
+    padding: 0.75rem 1.75rem; border-radius: 999px;
+    font-family: "Sora", sans-serif;
+    font-weight: 700; font-size: 0.9rem;
+    border: none; cursor: pointer;
+    transition: opacity 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 16px color-mix(in srgb, var(--primary-container) 35%, transparent);
+  }
+  .btn-primary:hover  { opacity: 0.9; transform: translateY(-1px); }
+  .btn-primary:active { transform: scale(0.97); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--on-surface-variant);
+    padding: 0.75rem 1.5rem; border-radius: 999px;
+    border: 1px solid var(--outline-variant);
+    font-family: "Hanken Grotesk", sans-serif;
+    font-size: 0.75rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    cursor: pointer; transition: all 0.2s ease;
+  }
+  .btn-ghost:hover {
+    background-color: var(--surface-container-high);
+    color: var(--on-surface);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--secondary);
+    padding: 0.75rem 1.5rem; border-radius: 999px;
+    border: 1.5px solid var(--secondary);
+    font-family: "Sora", sans-serif;
+    font-weight: 700; font-size: 0.85rem;
+    cursor: pointer; transition: all 0.2s ease;
+  }
+  .btn-secondary:hover {
+    background-color: color-mix(in srgb, var(--secondary) 10%, transparent);
+  }
+
+  /* ═══ Sidebar Navigation ═══════════════════════════════── */
+  .sidebar {
+    width: 240px;
+    background-color: var(--surface-container-lowest);
+    border-right: 1px solid var(--outline-variant);
+    display: flex; flex-direction: column;
+    padding: 24px 12px;
+    gap: 4px;
+  }
+  .sidebar-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px; border-radius: 999px;
+    font-family: "Hanken Grotesk", sans-serif;
+    font-size: 14px; font-weight: 500;
+    color: var(--on-surface-variant);
+    transition: all 0.15s ease; cursor: pointer;
+    border: none; background: transparent; width: 100%;
+    text-align: left;
+  }
+  .sidebar-item:hover {
+    background-color: var(--surface-container-high);
+    color: var(--on-surface);
+  }
+  .sidebar-item.active {
+    background-color: color-mix(in srgb, var(--primary-container) 15%, transparent);
+    color: var(--primary-container);
+    font-weight: 700;
+  }
+
+  /* ═══ Swipe Card Stamps ════════════════════════════════── */
+  .stamp-apply {
+    position: absolute; top: 24px; left: 20px;
+    border: 3px solid #22c55e; border-radius: 8px;
+    padding: 4px 14px; color: #22c55e;
+    font-family: "Sora", sans-serif;
+    font-weight: 900; font-size: 1.25rem;
+    transform: rotate(-15deg);
+    pointer-events: none; z-index: 20;
+    text-shadow: 0 0 12px #22c55e55;
+  }
+  .stamp-skip {
+    position: absolute; top: 24px; right: 20px;
+    border: 3px solid var(--error); border-radius: 8px;
+    padding: 4px 14px; color: var(--error);
+    font-family: "Sora", sans-serif;
+    font-weight: 900; font-size: 1.25rem;
+    transform: rotate(15deg);
+    pointer-events: none; z-index: 20;
+    text-shadow: 0 0 12px #ef444455;
+  }
+
+  /* ═══ AI Insights ══════════════════════════════════════── */
+  .ai-shimmer {
+    background: linear-gradient(
+      105deg,
+      color-mix(in srgb, var(--secondary) 8%, transparent) 0%,
+      color-mix(in srgb, var(--secondary) 16%, transparent) 50%,
+      color-mix(in srgb, var(--secondary) 8%, transparent) 100%
+    );
+    border: 1px solid color-mix(in srgb, var(--secondary) 25%, transparent);
+    border-radius: 1rem;
+  }
+
+  /* ═══ Kanban Board ═════════════════════════════════════── */
+  .kanban-column {
+    background-color: var(--surface-container-low);
+    border: 1px solid var(--outline-variant);
+    border-radius: 1rem;
+    padding: 16px;
+    min-width: 280px;
+    flex: 1;
+  }
+  .kanban-card {
+    background-color: var(--surface-container);
+    border: 1px solid var(--outline-variant);
+    border-radius: 0.75rem;
+    padding: 16px;
+    cursor: grab;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .kanban-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px color-mix(in srgb, #6366f1 12%, transparent);
+  }
+
+  /* ═══ Animations ═══════════════════════════════════════── */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 40%, transparent); }
+    50%       { box-shadow: 0 0 0 8px color-mix(in srgb, var(--primary) 0%, transparent); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50%       { transform: translateY(-6px); }
+  }
+  @keyframes shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  .animate-spin-slow  { animation: spin 1s linear infinite; }
+  .animate-float      { animation: float 3s ease-in-out infinite; }
+  .animate-shimmer    { animation: shimmer 3s linear infinite; background-size: 200% 100%; }
 }
