@@ -37,7 +37,7 @@ export default async function CompanyProfilePage({ params }: { params: { slug: s
           {/* Decorative background elements */}
           <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,var(--primary)_0,transparent_100%)] blur-2xl mix-blend-screen" />
         </div>
-        
+
         <div className="px-6 md:px-10 pb-10 relative">
           <div className="flex flex-col md:flex-row gap-6 md:items-end -mt-12 md:-mt-16 mb-8">
             <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl bg-surface-container-highest border-4 border-surface shadow-xl flex items-center justify-center text-4xl font-black text-on-surface overflow-hidden shrink-0">
@@ -47,7 +47,7 @@ export default async function CompanyProfilePage({ params }: { params: { slug: s
                 company.name.charAt(0)
               )}
             </div>
-            
+
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-3 mb-2">
                 <h1 className="text-3xl md:text-5xl font-display font-black text-on-surface">{company.name}</h1>
