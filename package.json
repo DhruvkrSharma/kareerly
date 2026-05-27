@@ -6,14 +6,20 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed": "tsx scripts/seed.ts",
+    "scrape": "tsx scripts/scrape.ts",
+    "embed": "tsx scripts/embed.ts",
+    "score": "tsx scripts/score.ts"
   },
   "dependencies": {
+    "@huggingface/inference": "^4.13.18",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.105.4",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.38.0",
     "framer-motion": "^12.38.0",
+    "groq-sdk": "^1.2.0",
     "lucide-react": "^1.16.0",
     "next": "15.3.3",
     "react": "^19.0.0",
