@@ -77,6 +77,22 @@ Write a tailored resume section in professional Markdown format. It must include
 Keep it highly actionable and optimized for ATS systems. Do not include contact info.
 `
 
+    if (!process.env.GROQ_API_KEY) {
+      console.log('No GROQ_API_KEY found, using mock data for demonstration.')
+      // Simulate API delay
+      await new Promise(r => setTimeout(r, 1500))
+      const mockMarkdown = `**ATS Match Analysis:** The candidate is a strong match (85%) with experience in React and Node.js. Missing explicit experience with GraphQL.
+
+**Professional Summary:** Full-stack engineer with 2+ years of experience building scalable web applications. Proven ability to deliver high-quality software in fast-paced environments.
+
+**Tailored Experience:**
+* **Engineered** scalable RESTful APIs using Node.js and Express, improving response times by 30%.
+* **Developed** responsive and interactive user interfaces using React and Next.js, increasing user engagement by 25%.
+* **Collaborated** effectively with cross-functional teams to deliver complex software projects on time and within budget.
+`
+      return NextResponse.json({ data: mockMarkdown })
+    }
+
     const chatCompletion = await groq.chat.completions.create({
       messages: [
         { role: 'system', content: 'You are an expert technical resume writer. Output ONLY markdown text without any introductory conversational text.' },

@@ -3,14 +3,15 @@ import { notFound } from 'next/navigation'
 import { ExternalLink, MapPin, Users, Calendar, Briefcase, ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 
-export default async function CompanyProfilePage({ params }: { params: { slug: string } }) {
+export default async function CompanyProfilePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
   const supabase = await createServerSupabaseClient()
 
   // 1. Fetch Company
   const { data: company } = await supabase
     .from('companies')
     .select('*')
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .single()
 
   if (!company) {
