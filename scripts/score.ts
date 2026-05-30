@@ -93,7 +93,7 @@ Job Description:
       { role: 'system', content: 'You are a JSON-only response bot.' },
       { role: 'user', content: prompt }
     ],
-    model: 'llama3-8b-8192',
+    model: 'llama-3.3-70b-versatile',
     temperature: 0.2,
     response_format: { type: 'json_object' }
   })
