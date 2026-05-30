@@ -12,6 +12,28 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 export type TabId = 'home' | 'discover' | 'kanban' | 'saved' | 'profile'
 
+/* ── Generic Modal Component ────────────────────────────────── */
+function Modal({ title, isOpen, onClose, children }: { title: string, isOpen: boolean, onClose: () => void, children: React.ReactNode }) {
+  if (!isOpen) return null
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        onClick={(e) => e.stopPropagation()}
+        className="bg-surface w-full max-w-md rounded-3xl shadow-2xl p-6 border border-outline-variant/50"
+      >
+        <h2 className="text-xl font-display font-black text-on-surface mb-4">{title}</h2>
+        <div className="text-on-surface-variant text-sm space-y-4">
+          {children}
+        </div>
+        <button onClick={onClose} className="mt-6 w-full btn-primary py-2.5">Close</button>
+      </motion.div>
+    </div>
+  )
+}
+
 interface NavProps {
   activeTab: string
   onTabChange: (tab: string) => void
@@ -42,6 +64,8 @@ export function useDarkMode() {
 export function Sidebar({ activeTab, onTabChange }: NavProps) {
   const { isDark, toggle } = useDarkMode()
   const router = useRouter()
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [helpOpen, setHelpOpen] = useState(false)
 
   const mainNav = [
     { id: 'home',     icon: Briefcase,  label: 'Job Feed' },
@@ -103,16 +127,22 @@ export function Sidebar({ activeTab, onTabChange }: NavProps) {
 
       {/* Bottom section */}
       <div className="pb-2 space-y-1 border-t border-outline-variant pt-3 mt-auto">
-        {bottomNav.map(({ id, icon: Icon, label }) => (
-          <button
-            key={id}
-            onClick={() => {}}
-            className="sidebar-item"
-          >
-            <Icon className="w-[18px] h-[18px]" />
-            <span>{label}</span>
-          </button>
-        ))}
+        <button onClick={() => setSettingsOpen(true)} className="sidebar-item">
+          <Settings className="w-[18px] h-[18px]" />
+          <span>Settings</span>
+        </button>
+        <button onClick={() => setHelpOpen(true)} className="sidebar-item">
+          <HelpCircle className="w-[18px] h-[18px]" />
+          <span>Help</span>
+        </button>
+
+        {/* Modals */}
+        <Modal title="Settings" isOpen={settingsOpen} onClose={() => setSettingsOpen(false)}>
+          <p>This is a placeholder for your account settings, notification preferences, and application privacy options.</p>
+        </Modal>
+        <Modal title="Help Center" isOpen={helpOpen} onClose={() => setHelpOpen(false)}>
+          <p>Need help? You can contact our support team or view the frequently asked questions here.</p>
+        </Modal>
 
         {/* Theme toggle */}
         <button onClick={toggle} className="sidebar-item">
@@ -128,6 +158,7 @@ export function Sidebar({ activeTab, onTabChange }: NavProps) {
 export function TopNav({ activeTab, onTabChange }: NavProps) {
   const { isDark, toggle } = useDarkMode()
   const [profileOpen, setProfileOpen] = useState(false)
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
   const router = useRouter()
 
   async function handleSignOut() {
@@ -208,13 +239,26 @@ export function TopNav({ activeTab, onTabChange }: NavProps) {
         </button>
 
         {/* Notifications */}
-        <button className="relative p-2 rounded-full text-on-surface-variant hover:text-primary transition-colors">
+        <button onClick={() => setNotificationsOpen(true)} className="relative p-2 rounded-full text-on-surface-variant hover:text-primary transition-colors">
           <Bell className="w-5 h-5" />
           <span
             className="absolute top-2 right-2 w-2 h-2 rounded-full border-2"
             style={{ background: 'var(--primary-container)', borderColor: 'var(--surface)' }}
           />
         </button>
+
+        <Modal title="Notifications" isOpen={notificationsOpen} onClose={() => setNotificationsOpen(false)}>
+          <div className="space-y-3">
+            <div className="p-3 bg-surface-container rounded-xl text-xs">
+              <span className="font-bold block mb-1">New AI Match</span>
+              We found 3 new software engineering roles matching your profile.
+            </div>
+            <div className="p-3 bg-surface-container rounded-xl text-xs">
+              <span className="font-bold block mb-1">Resume Tailored</span>
+              Your resume was successfully tailored for Google.
+            </div>
+          </div>
+        </Modal>
 
         {/* Profile avatar */}
         <div className="relative">
