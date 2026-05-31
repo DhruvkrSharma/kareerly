@@ -256,7 +256,7 @@ export default function FeedDashboard() {
                 </div>
               </div>
               <p className="text-sm text-on-surface-variant leading-snug">
-                You're in the <strong className="text-on-surface">top 10%</strong> of candidates in your domain.
+                You&apos;re in the <strong className="text-on-surface">top 10%</strong> of candidates in your domain.
               </p>
             </div>
             <div className="space-y-2.5">
