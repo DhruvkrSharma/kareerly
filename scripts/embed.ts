@@ -6,17 +6,19 @@ import { resolve } from 'path'
 import { HfInference } from '@huggingface/inference'
 
 // Load .env.local
-const envPath = resolve(process.cwd(), '.env.local')
-const envContent = readFileSync(envPath, 'utf-8')
-for (const line of envContent.split('\n')) {
-  const trimmed = line.trim()
-  if (!trimmed || trimmed.startsWith('#')) continue
-  const eqIdx = trimmed.indexOf('=')
-  if (eqIdx === -1) continue
-  const key = trimmed.slice(0, eqIdx)
-  const val = trimmed.slice(eqIdx + 1)
-  if (!process.env[key]) process.env[key] = val
-}
+try {
+  const envPath = resolve(process.cwd(), '.env.local')
+  const envContent = readFileSync(envPath, 'utf-8')
+  for (const line of envContent.split('\n')) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) continue
+    const eqIdx = trimmed.indexOf('=')
+    if (eqIdx === -1) continue
+    const key = trimmed.slice(0, eqIdx)
+    const val = trimmed.slice(eqIdx + 1)
+    if (!process.env[key]) process.env[key] = val
+  }
+} catch(e) {}
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
