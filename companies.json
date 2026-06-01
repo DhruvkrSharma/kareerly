@@ -1,0 +1,134 @@
+[
+  {
+    "name": "Razorpay",
+    "slug": "razorpay",
+    "careers_url": "https://boards.greenhouse.io/razorpay",
+    "ats_type": "greenhouse"
+  },
+  {
+    "name": "Stripe",
+    "slug": "stripe",
+    "careers_url": "https://boards.greenhouse.io/stripe",
+    "ats_type": "greenhouse"
+  },
+  {
+    "name": "Notion",
+    "slug": "notion",
+    "careers_url": "https://boards.greenhouse.io/notion",
+    "ats_type": "greenhouse"
+  },
+  {
+    "name": "Figma",
+    "slug": "figma",
+    "careers_url": "https://jobs.lever.co/figma",
+    "ats_type": "lever"
+  },
+  {
+    "name": "Postman",
+    "slug": "postman",
+    "careers_url": "https://boards.greenhouse.io/postman",
+    "ats_type": "greenhouse"
+  },
+  {
+    "name": "Coinbase",
+    "slug": "coinbase",
+    "careers_url": "https://boards.greenhouse.io/coinbase",
+    "ats_type": "greenhouse"
+  },
+  {
+    "name": "Discord",
+    "slug": "discord",
+    "careers_url": "https://boards.greenhouse.io/discord",
+    "ats_type": "greenhouse"
+  },
+  {
+    "name": "OpenAI",
+    "slug": "openai",
+    "careers_url": "https://boards.greenhouse.io/openai",
+    "ats_type": "greenhouse"
+  },
+  {
+    "name": "Anthropic",
+    "slug": "anthropic",
+    "careers_url": "https://jobs.lever.co/anthropic",
+    "ats_type": "lever"
+  },
+  {
+    "name": "Plaid",
+    "slug": "plaid",
+    "careers_url": "https://boards.greenhouse.io/plaid",
+    "ats_type": "greenhouse"
+  },
+  {
+    "name": "Databricks",
+    "slug": "databricks",
+    "careers_url": "https://boards.greenhouse.io/databricks",
+    "ats_type": "greenhouse"
+  },
+  {
+    "name": "Zepto",
+    "slug": "zepto",
+    "careers_url": "https://careers.zeptonow.com/",
+    "ats_type": "custom"
+  },
+  {
+    "name": "CRED",
+    "slug": "cred",
+    "careers_url": "https://careers.cred.club/",
+    "ats_type": "custom"
+  },
+  {
+    "name": "Swiggy",
+    "slug": "swiggy",
+    "careers_url": "https://careers.swiggy.com/",
+    "ats_type": "custom"
+  },
+  {
+    "name": "Zomato",
+    "slug": "zomato",
+    "careers_url": "https://www.zomato.com/careers",
+    "ats_type": "custom"
+  },
+  {
+    "name": "Vercel",
+    "slug": "vercel",
+    "careers_url": "https://vercel.com/careers",
+    "ats_type": "custom"
+  },
+  {
+    "name": "Airbnb",
+    "slug": "airbnb",
+    "careers_url": "https://careers.airbnb.com/",
+    "ats_type": "custom"
+  },
+  {
+    "name": "Uber",
+    "slug": "uber",
+    "careers_url": "https://www.uber.com/us/en/careers/",
+    "ats_type": "custom"
+  },
+  {
+    "name": "Snowflake",
+    "slug": "snowflake",
+    "careers_url": "https://careers.snowflake.com/",
+    "ats_type": "custom"
+  },
+  {
+    "name": "Groww",
+    "slug": "groww",
+    "careers_url": "https://groww.in/careers",
+    "ats_type": "custom"
+  },
+  {
+    "name": "PhonePe",
+    "slug": "phonepe",
+    "careers_url": "https://www.phonepe.com/careers/",
+    "ats_type": "custom"
+  },
+  {
+    "name": "Rippling",
+    "slug": "rippling",
+    "careers_url": "https://www.rippling.com/careers",
+    "ats_type": "custom"
+  }
+]
