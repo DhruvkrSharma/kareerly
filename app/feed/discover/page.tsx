@@ -45,11 +45,15 @@ export default function DiscoverPage() {
     const card = cards[cardIndex]
     if (!card) return
     const msgs: Record<SwipeAction, string> = {
-      apply: '🎉 Applied! Good luck.',
+      apply: card.apply_url ? 'Opening job in new tab...' : 'Job link unavailable',
       save:  '★ Saved for later.',
       reject: 'Skipped.',
     }
-    showToast(msgs[action], action === 'apply' ? 'success' : 'info')
+    showToast(msgs[action], action === 'apply' && card.apply_url ? 'success' : 'info')
+    
+    if (action === 'apply' && card.apply_url) {
+      window.open(card.apply_url, '_blank', 'noopener,noreferrer')
+    }
     fetch('/api/swipe', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

@@ -74,9 +74,12 @@ Return ONLY a valid JSON object with the following schema:
   "score_factors": {
     "skills_overlap": <float between 0 and 1>,
     "experience_fit": <float between 0 and 1>,
-    "domain_match": <float between 0 and 1>
+    "domain_match": <float between 0 and 1>,
+    "requirements_match": <float between 0 and 1>
   },
-  "tier": <integer 1 to 4, where 1 is 90%+ match, 2 is 75-89%, 3 is 50-74%, 4 is <50%>
+  "tier": <integer 1 to 4, where 1 is 90%+ match, 2 is 75-89%, 3 is 50-74%, 4 is <50%>,
+  "why_matched": ["reason 1", "reason 2", "reason 3"],
+  "resume_gaps": ["missing skill 1", "missing skill 2"]
 }
 
 Candidate Profile:
@@ -88,6 +91,8 @@ Job Description:
 - Title: ${job.title}
 - Skills Required: ${job.skills_required?.join(', ') || 'Unknown'}
 - Experience Required: ${job.experience_min} to ${job.experience_max} years
+- Requirements: ${job.requirements?.join(', ') || 'Unknown'}
+- Full Description: ${job.description?.substring(0, 1500) || 'Unknown'}
 `
 
   const chatCompletion = await groq.chat.completions.create({
@@ -110,7 +115,11 @@ async function insertRecommendation(userId: string, jobId: number, result: any, 
     score: result.score,
     confidence: result.confidence,
     scoring_version: 'groq-llama3',
-    score_factors: result.score_factors,
+    score_factors: {
+      ...result.score_factors,
+      why_matched: result.why_matched || [],
+      resume_gaps: result.resume_gaps || []
+    },
     tier: result.tier,
     feed_rank: rank,
     status: 'active',

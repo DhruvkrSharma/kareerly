@@ -39,7 +39,10 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user && !PUBLIC_PATHS.some(p => path.startsWith(p))) {
+  // Allow bypass for E2E testing
+  const isE2E = request.cookies.has('e2e-bypass')
+
+  if (!user && !isE2E && !PUBLIC_PATHS.some(p => path.startsWith(p))) {
     return NextResponse.redirect(new URL('/auth/login', request.url))
   }
 

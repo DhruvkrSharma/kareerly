@@ -141,7 +141,10 @@ export default function SavedPage() {
   async function handleApply(recId: number, jobId: number, applyUrl: string) {
     // Open in new tab
     if (applyUrl && applyUrl !== '#') {
-      window.open(applyUrl, '_blank')
+      window.open(applyUrl, '_blank', 'noopener,noreferrer')
+      showToast('Opening job in new tab...', 'success')
+    } else {
+      showToast('Job link unavailable', 'info')
     }
 
     // Update local state
@@ -151,8 +154,6 @@ export default function SavedPage() {
       }
       return j
     }))
-
-    showToast('🎉 Applied! Application added to track list.')
 
     try {
       await fetch('/api/swipe', {

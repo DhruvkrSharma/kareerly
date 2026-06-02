@@ -62,6 +62,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ data: mockMarkdown })
     }
 
+    // 2.5. Check tailored_resumes cache
+    const { data: cachedResume } = await supabase
+      .from('tailored_resumes')
+      .select('content')
+      .eq('user_id', user.id)
+      .eq('job_id', job_id)
+      .single()
+
+    if (cachedResume) {
+      return NextResponse.json({ data: cachedResume.content })
+    }
+
     // 3. Setup Groq
     const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
     
@@ -79,12 +91,14 @@ Target Job:
 - Title: ${job.title}
 - Company: ${job.companies?.name || 'Company'}
 - Skills Required: ${job.skills_required?.join(', ') || 'N/A'}
+- Requirements: ${job.requirements?.join(', ') || 'N/A'}
 - Description: ${job.description}
 
 Write a tailored resume section in professional Markdown format. It must include:
-1. **ATS Match Analysis:** A brief 1-2 sentence analysis of how well the candidate matches the job, identifying any critical missing skills.
+1. **ATS Match Analysis:** A brief 1-2 sentence analysis of how well the candidate matches the job, highlighting matching skills.
 2. **Professional Summary:** A strong, 2-sentence summary highlighting their fit for the target job.
-3. **Tailored Experience:** 3-4 impactful bullet points (using the STAR method) that connect the candidate's existing skills to the job requirements.
+3. **Tailored Experience:** 3-4 impactful bullet points (using the STAR method) that connect the candidate's existing skills specifically to the job requirements.
+4. **Suggested Additions:** Suggest 1-2 skills or experiences to add to the resume to address any gaps identified in the requirements.
 
 Keep it highly actionable and optimized for ATS systems. Do not include contact info.
 `
@@ -115,6 +129,13 @@ Keep it highly actionable and optimized for ATS systems. Do not include contact 
     })
 
     const markdownContent = chatCompletion.choices[0].message.content
+
+    // 5. Cache result
+    await supabase.from('tailored_resumes').upsert({
+      user_id: user.id,
+      job_id,
+      content: markdownContent
+    }, { onConflict: 'user_id, job_id' })
 
     return NextResponse.json({ data: markdownContent })
 

@@ -20,6 +20,28 @@ export default function LoginPage() {
     document.documentElement.classList.add('dark')
   }, [])
 
+  async function handleResetPassword() {
+    if (!email.trim()) {
+      setError('Please enter your email to reset password')
+      return
+    }
+    setLoading(true)
+    setError(null)
+    setMessage(null)
+    const supabase = createClient()
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/update-password`,
+      })
+      if (error) throw error
+      setMessage('Password reset instructions sent to your email.')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Something went wrong')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   async function handleSubmit() {
     if (!email.trim() || !password.trim()) {
       setError('Please fill in all fields')
@@ -89,8 +111,8 @@ export default function LoginPage() {
 
         {/* Footer */}
         <div className="relative z-10 flex gap-4 text-xs" style={{ color: 'var(--on-surface-variant)' }}>
-          <button className="hover:text-on-surface transition-colors">Privacy</button>
-          <button className="hover:text-on-surface transition-colors">Terms</button>
+          <button onClick={() => alert('Privacy Policy coming soon')} className="hover:text-on-surface transition-colors">Privacy</button>
+          <button onClick={() => alert('Terms of Service coming soon')} className="hover:text-on-surface transition-colors">Terms</button>
         </div>
       </div>
 
@@ -176,7 +198,12 @@ export default function LoginPage() {
             {/* Forgot password */}
             {mode === 'login' && (
               <div className="text-right">
-                <button className="text-xs font-semibold transition-colors" style={{ color: 'var(--primary-container)' }}>
+                <button 
+                  onClick={handleResetPassword}
+                  disabled={loading}
+                  className="text-xs font-semibold transition-colors" 
+                  style={{ color: 'var(--primary-container)' }}
+                >
                   Forgot password?
                 </button>
               </div>

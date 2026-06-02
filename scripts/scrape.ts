@@ -1,8 +1,7 @@
-// Seed script: pulls real jobs from RapidAPI JSearch
-// Run with: npx tsx scripts/scrape.ts
-
 import { readFileSync } from 'fs'
 import { resolve } from 'path'
+import { chromium, Page } from 'playwright'
+import Groq from 'groq-sdk'
 
 // Load .env.local
 try {
@@ -23,17 +22,19 @@ try {
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY!
+const GROQ_API_KEY = process.env.GROQ_API_KEY!
 
 if (!SUPABASE_URL || !SERVICE_KEY) {
-  console.error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local')
+  console.error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
   process.exit(1)
 }
 
-if (!RAPIDAPI_KEY) {
-  console.error('Missing RAPIDAPI_KEY in .env.local. Get one from RapidAPI JSearch.')
+if (!GROQ_API_KEY) {
+  console.error('Missing GROQ_API_KEY')
   process.exit(1)
 }
+
+const groq = new Groq({ apiKey: GROQ_API_KEY })
 
 const headers = {
   apikey: SERVICE_KEY,
@@ -60,78 +61,159 @@ async function rpc(table: string, method: string, body?: any, onConflict?: strin
 
 function generateHash(input: string): string {
   // Simple hash for content_hash deduplication
-  let hash = 0
-  for (let i = 0; i < input.length; i++) {
-    const char = input.charCodeAt(i)
-    hash = ((hash << 5) - hash) + char
-    hash = hash & hash // Convert to 32bit integer
-  }
-  return hash.toString(36)
+  const { createHash } = require('crypto');
+  return createHash('sha256').update(input).digest('hex');
 }
 
 function slugify(text: string) {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
 }
 
-async function fetchJSearchJobs(query: string) {
-  const url = `https://jsearch.p.rapidapi.com/search?query=${encodeURIComponent(query)}&page=1&num_pages=1`
-  const options = {
-    method: 'GET',
-    headers: {
-      'X-RapidAPI-Key': RAPIDAPI_KEY,
-      'X-RapidAPI-Host': 'jsearch.p.rapidapi.com'
-    }
-  }
+const TARGETS = [
+  { name: 'Razorpay', url: 'https://razorpay.com/jobs/' },
+  { name: 'Zepto', url: 'https://careers.zeptonow.com/' },
+  { name: 'CRED', url: 'https://careers.cred.club/' },
+  { name: 'Meesho', url: 'https://careers.meesho.com/' },
+  { name: 'Swiggy', url: 'https://careers.swiggy.com/' },
+  { name: 'BrowserStack', url: 'https://www.browserstack.com/careers' },
+  { name: 'PhonePe', url: 'https://careers.phonepe.com/' },
+  { name: 'Flipkart', url: 'https://careers.flipkart.com/' },
+  { name: 'Zomato', url: 'https://www.zomato.com/careers' },
+  { name: 'Paytm', url: 'https://careers.paytm.com/' }
+]
 
-  const response = await fetch(url, options)
-  if (!response.ok) {
-    console.error('JSearch API failed:', await response.text())
+async function extractJobLinks(page: Page, baseUrl: string): Promise<string[]> {
+  try {
+    await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 30000 })
+    // Basic heuristic: find links that might be jobs
+    const links = await page.$$eval('a', (anchors) => anchors.map(a => a.href))
+    const jobLinks = links.filter(href => {
+      const lower = href.toLowerCase()
+      // avoid mailto, tel, and obvious non-job links
+      if (lower.startsWith('mailto:') || lower.startsWith('tel:')) return false
+      // Only keep links that look like specific job postings, not the root careers page
+      if (href === baseUrl || href + '/' === baseUrl) return false
+      // Simple heuristic for job links
+      return lower.includes('/job') || lower.includes('/careers/') || lower.includes('/openings/') || lower.includes('gh_jid') || lower.includes('req') || lower.includes('position') || /\d{5,}/.test(lower)
+    })
+    
+    return Array.from(new Set(jobLinks)).slice(0, 3) // limit to 3 jobs per company for speed
+  } catch (e) {
+    console.error(`Failed to get links from ${baseUrl}:`, e)
     return []
   }
-  const json = await response.json()
-  return json.data || []
+}
+
+async function parseJobWithAI(text: string, url: string, companyName: string) {
+  const prompt = `You are a job parser. Extract the following details from this job posting text.
+If a field is missing, use null or appropriate defaults.
+Job URL: ${url}
+Company: ${companyName}
+
+Extract as JSON with exact keys:
+- title (string)
+- description (string, full summary of the job)
+- requirements (array of strings)
+- skills_required (array of strings, e.g., ["React", "Python"])
+- location (string)
+- remote_ok (boolean)
+- experience_min (number or null)
+- experience_max (number or null)
+- job_type (string: fulltime, parttime, contract, internship)
+- salary_min (number or null)
+- salary_max (number or null)
+
+Text:
+${text.substring(0, 6000)} // Truncated to fit context`
+
+  try {
+    const response = await groq.chat.completions.create({
+      model: 'llama3-70b-8192',
+      messages: [{ role: 'user', content: prompt }],
+      response_format: { type: 'json_object' }
+    })
+    
+    const content = response.choices[0]?.message?.content
+    if (!content) return null
+    return JSON.parse(content)
+  } catch (e) {
+    console.error('Groq parse error:', e)
+    return null
+  }
 }
 
 async function main() {
-  console.log('🔍 Fetching jobs from RapidAPI JSearch...')
-  const jsearchData = await fetchJSearchJobs('software engineer india')
-  console.log(`   Found ${jsearchData.length} jobs.`)
-
-  if (jsearchData.length === 0) {
-    console.log('No jobs to process.')
-    return
-  }
-
+  console.log('🚀 Starting Playwright scraper...')
+  
+  const browser = await chromium.launch({ headless: true })
+  const context = await browser.newContext()
+  const page = await context.newPage()
+  
   const companiesToInsert = []
-  const jobsToInsertData = []
-
-  for (const item of jsearchData) {
-    if (!item.employer_name || !item.job_title) continue
-
-    const companySlug = slugify(item.employer_name)
+  const jobsToInsert = []
+  
+  for (const target of TARGETS) {
+    console.log(`\n🔍 Scraping ${target.name}...`)
+    
+    const companySlug = slugify(target.name)
     companiesToInsert.push({
-      name: item.employer_name,
+      name: target.name,
       slug: companySlug,
-      logo_url: item.employer_logo || null,
-      website: item.employer_website || null,
-      location: item.job_city ? `${item.job_city}, ${item.job_country}` : item.job_country || 'India',
-      description: item.employer_company_type ? `Type: ${item.employer_company_type}` : 'Tech company',
+      logo_url: null,
+      website: target.url,
+      location: 'India', // default
+      description: 'Tech company'
     })
-
-    jobsToInsertData.push({
-      jsearchItem: item,
-      companySlug: companySlug,
-    })
+    
+    const jobLinks = await extractJobLinks(page, target.url)
+    console.log(`Found ${jobLinks.length} potential job links.`)
+    
+    for (const link of jobLinks) {
+      try {
+        await page.goto(link, { waitUntil: 'domcontentloaded', timeout: 20000 })
+        const bodyText = await page.evaluate(() => document.body.innerText)
+        
+        if (bodyText.length < 200) continue
+        
+        console.log(`Parsing job: ${link}`)
+        const parsed = await parseJobWithAI(bodyText, link, target.name)
+        if (!parsed || !parsed.title) continue
+        
+        jobsToInsert.push({
+          companySlug,
+          title: parsed.title,
+          description: parsed.description || '',
+          requirements: parsed.requirements || [],
+          skills_required: parsed.skills_required || [],
+          location: parsed.location || 'India',
+          remote_ok: parsed.remote_ok || false,
+          experience_min: parsed.experience_min,
+          experience_max: parsed.experience_max,
+          job_type: parsed.job_type || 'fulltime',
+          salary_min: parsed.salary_min,
+          salary_max: parsed.salary_max,
+          apply_url: link, // Exact URL to the job
+        })
+      } catch (e) {
+        console.error(`Error processing ${link}:`, e)
+      }
+    }
+  }
+  
+  await browser.close()
+  
+  if (jobsToInsert.length === 0) {
+    console.log('No jobs found.')
+    return
   }
 
   // Deduplicate companies by slug before inserting
   const uniqueCompanies = Array.from(new Map(companiesToInsert.map(c => [c.slug, c])).values())
 
-  console.log('🏗️  Upserting companies...')
+  console.log('\n🏗️  Upserting companies...')
   const companyResult = await rpc('companies', 'POST', uniqueCompanies, 'slug')
   if (!companyResult) { console.error('Failed to seed companies'); return }
-  console.log(`   ✅ Upserted ${companyResult.length} companies`)
-
+  
   // Fetch all companies for ID mapping
   const allCompanies = await rpc('companies?select=id,name,location,slug', 'GET')
   if (!allCompanies) { console.error('Failed to fetch companies'); return }
@@ -140,39 +222,28 @@ async function main() {
   console.log('\n📋 Upserting jobs...')
   const jobs = []
 
-  for (const data of jobsToInsertData) {
+  for (const data of jobsToInsert) {
     const c = companyMap.get(data.companySlug)
     if (!c) continue
 
-    const t = data.jsearchItem
-    
-    // Map FULLTIME to fulltime etc
-    let jobType = 'fulltime'
-    if (t.job_employment_type) {
-      const typeStr = t.job_employment_type.toLowerCase()
-      if (typeStr.includes('part')) jobType = 'parttime'
-      else if (typeStr.includes('contract')) jobType = 'contract'
-      else if (typeStr.includes('intern')) jobType = 'internship'
-    }
-
-    const uniqueString = `${c.id}-${t.job_title}-${t.job_city}`
+    const uniqueString = `${data.title}-${c.name}-${data.apply_url}`
     const contentHash = generateHash(uniqueString)
 
     jobs.push({
       company_id: c.id,
-      title: t.job_title,
-      description: t.job_description ? t.job_description.substring(0, 500) + '...' : `Join ${c.name} as a ${t.job_title}.`,
-      requirements: [],
-      skills_required: [],
-      location: t.job_city ? `${t.job_city}, ${t.job_country}` : t.job_country || 'India',
-      remote_ok: t.job_is_remote === true,
-      salary_min: t.job_min_salary || null,
-      salary_max: t.job_max_salary || null,
-      experience_min: null,
-      experience_max: null,
-      job_type: jobType,
-      apply_url: t.job_apply_link || null,
-      source_url: t.job_google_link || null,
+      title: data.title,
+      description: data.description,
+      requirements: data.requirements,
+      skills_required: data.skills_required,
+      location: data.location,
+      remote_ok: data.remote_ok,
+      salary_min: data.salary_min,
+      salary_max: data.salary_max,
+      experience_min: data.experience_min,
+      experience_max: data.experience_max,
+      job_type: data.job_type,
+      apply_url: data.apply_url,
+      source_url: data.apply_url,
       content_hash: contentHash,
       is_active: true,
       scraped_at: new Date().toISOString(),

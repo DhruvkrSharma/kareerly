@@ -1,43 +1,42 @@
-import { Ratelimit } from '@upstash/ratelimit'
-import { Redis } from '@upstash/redis'
-
-let ratelimit: Ratelimit | null = null
-
-/**
- * Returns an Upstash rate limiter instance.
- * Falls back to null (no rate limiting) if env vars are missing —
- * this lets the app run locally without Redis.
- */
-export function getRatelimit(): Ratelimit | null {
-  if (ratelimit) return ratelimit
-
-  const url = process.env.UPSTASH_REDIS_REST_URL
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN
-
-  if (!url || !token) {
-    console.warn('[ratelimit] UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN missing — rate limiting disabled')
-    return null
-  }
-
-  const redis = new Redis({ url, token })
-
-  ratelimit = new Ratelimit({
-    redis,
-    // 30 requests per 60-second sliding window per user
-    limiter: Ratelimit.slidingWindow(30, '60 s'),
-    analytics: true,
-    prefix: 'kareerly:ratelimit',
-  })
-
-  return ratelimit
-}
+// Rate limiting via Supabase Edge Functions
 
 /**
  * Check rate limit for a given identifier (usually user ID or IP).
- * Returns { success, limit, remaining, reset } or null if rate limiting is disabled.
+ * Returns { success, limit, remaining, reset }
  */
 export async function checkRateLimit(identifier: string) {
-  const rl = getRatelimit()
-  if (!rl) return { success: true, limit: 0, remaining: 0, reset: 0 }
-  return rl.limit(identifier)
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !anonKey) {
+    console.warn('[ratelimit] NEXT_PUBLIC_SUPABASE_URL or ANON_KEY missing — rate limiting disabled')
+    return { success: true, limit: 30, remaining: 30, reset: 0 }
+  }
+
+  try {
+    const res = await fetch(`${supabaseUrl}/functions/v1/rate-limit`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${anonKey}`
+      },
+      body: JSON.stringify({ identifier })
+    })
+
+    if (!res.ok) {
+      console.warn('[ratelimit] Edge function failed, allowing request by default', await res.text())
+      return { success: true, limit: 30, remaining: 30, reset: 0 }
+    }
+
+    const json = await res.json()
+    return {
+      success: json.success,
+      limit: 30, // MAX_REQUESTS defined in Edge Function
+      remaining: json.remaining,
+      reset: json.reset
+    }
+  } catch (err) {
+    console.warn('[ratelimit] Fetch to Edge Function failed:', err)
+    return { success: true, limit: 30, remaining: 30, reset: 0 }
+  }
 }
