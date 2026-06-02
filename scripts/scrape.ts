@@ -77,7 +77,7 @@ const TARGETS = [
   { name: 'Swiggy', url: 'https://careers.swiggy.com/' },
   { name: 'BrowserStack', url: 'https://www.browserstack.com/careers' },
   { name: 'PhonePe', url: 'https://careers.phonepe.com/' },
-  { name: 'Flipkart', url: 'https://careers.flipkart.com/' },
+  { name: 'Flipkart', url: 'https://www.flipkartcareers.com/' },
   { name: 'Zomato', url: 'https://www.zomato.com/careers' },
   { name: 'Paytm', url: 'https://careers.paytm.com/' }
 ]
@@ -145,7 +145,15 @@ ${text.substring(0, 6000)} // Truncated to fit context`
 async function main() {
   console.log('🚀 Starting Playwright scraper...')
   
-  const browser = await chromium.launch({ headless: true })
+  let browser;
+  if (process.env.BROWSERLESS_API_KEY) {
+    console.log('🌐 Connecting to Browserless.io...')
+    browser = await chromium.connectOverCDP(`wss://chrome.browserless.io?token=${process.env.BROWSERLESS_API_KEY}`)
+  } else {
+    console.log('💻 Launching local Chromium...')
+    browser = await chromium.launch({ headless: true })
+  }
+  
   const context = await browser.newContext()
   const page = await context.newPage()
   

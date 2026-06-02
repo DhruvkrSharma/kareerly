@@ -1,0 +1,7 @@
+name = "kareerly-api-gateway"
+main = "src/index.ts"
+compatibility_date = "2024-02-23"
+
+[vars]
+# NEXTJS_ORIGIN = "https://your-production-url.vercel.app"
+# AUTH_SECRET = "your-secret-here"

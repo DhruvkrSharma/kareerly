@@ -6,15 +6,19 @@
 
 # Test info
 
-- Name: scraper.test.ts >> E2E Scraper Career Pages Test >> Test career page: Paytm
+- Name: scraper.test.ts >> E2E Scraper Career Pages Test >> Test career page: Razorpay
 - Location: tests/e2e/scraper.test.ts:23:9
 
 # Error details
 
 ```
-Error: page.goto: net::ERR_NAME_NOT_RESOLVED at https://careers.paytm.com/
+Test timeout of 30000ms exceeded.
+```
+
+```
+TimeoutError: page.goto: Timeout 30000ms exceeded.
 Call log:
-  - navigating to "https://careers.paytm.com/", waiting until "domcontentloaded"
+  - navigating to "https://razorpay.com/jobs/", waiting until "domcontentloaded"
 
 ```
 
@@ -46,7 +50,7 @@ Call log:
   23 |     test(`Test career page: ${target.name}`, async ({ page }) => {
   24 |       // Test that each career page URL returns status 200
 > 25 |       const response = await page.goto(target.url, { waitUntil: 'domcontentloaded', timeout: 30000 })
-     |                                   ^ Error: page.goto: net::ERR_NAME_NOT_RESOLVED at https://careers.paytm.com/
+     |                                   ^ TimeoutError: page.goto: Timeout 30000ms exceeded.
   26 |       expect(response?.status()).toBe(200)
   27 | 
   28 |       // Test that at least 1 job is found per page
