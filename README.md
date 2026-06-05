@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Kareerly
+
+Kareerly is an AI-assisted career discovery app for Indian tech roles. It combines a swipe-based job feed, saved applications, a lightweight application pipeline, company profiles, and AI-generated resume tailoring.
+
+## Tech Stack
+
+- Next.js 16 App Router with React 19
+- TypeScript
+- Tailwind CSS 4
+- Supabase Auth, Postgres, RPC, and Edge Functions
+- Groq for resume tailoring and scoring
+- Hugging Face embeddings with pgvector
+- Playwright and Vitest
+- Optional Cloudflare Worker gateway
+
+> Important: this repository uses a newer Next.js release with local docs in `node_modules/next/dist/docs/`. Read the relevant local guide before changing routing, middleware/proxy, or build behavior.
+
+## Project Docs
+
+- [Project documentation](docs/PROJECT_DOCUMENTATION.md)
+- [Improvement plan](docs/IMPROVEMENT_PLAN.md)
+- [FastAPI target architecture](docs/FASTAPI_ARCHITECTURE.md)
+- [FastAPI migration roadmap](docs/MIGRATION_ROADMAP.md)
+- [Interview ownership notes](docs/INTERVIEW_OWNERSHIP.md)
 
 ## Getting Started
 
-First, run the development server:
+Install dependencies:
+
+```bash
+npm install
+```
+
+Create `.env.local` with the services you need:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+GROQ_API_KEY=
+HUGGINGFACE_API_KEY=
+SEED_USER_ID=
+```
+
+Run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run dev      # start Next.js dev server
+npm run build    # production build and type check
+npm run start    # start production server
+npm run lint     # ESLint
+npm run seed     # seed Supabase demo data
+npm run scrape   # scrape career pages and parse jobs with Groq
+npm run embed    # generate job embeddings
+npm run score    # generate recommendations for a seed user
+```
 
-## Learn More
+Run unit tests directly:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npx vitest run tests/unit/ratelimit.test.ts
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Run E2E tests after building:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run build
+npx playwright test
+```
 
-## Deploy on Vercel
+## Current Health Check
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+As of the latest scan:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `npm run lint` passes with 7 warnings.
+- `npx vitest run tests/unit/ratelimit.test.ts` passes.
+- `npm run build` compiles, then fails type checking because `cloudflare/src/index.ts` references Cloudflare Worker types that are included in the Next.js TypeScript build.
+- Next.js warns that the `middleware.ts` convention is deprecated in favor of `proxy`.
+
+See [Improvement plan](docs/IMPROVEMENT_PLAN.md) for prioritized fixes.
