@@ -26,6 +26,14 @@ const nextConfig: NextConfig = {
           destination: 'http://127.0.0.1:8000/resume/tailor',
         },
         {
+          source: '/api/resume/parse',
+          destination: 'http://127.0.0.1:8000/resume/parse',
+        },
+        {
+          source: '/api/profile/update',
+          destination: 'http://127.0.0.1:8000/profile/update',
+        },
+        {
           source: '/api/matching/score',
           destination: 'http://127.0.0.1:8000/matching/score',
         },

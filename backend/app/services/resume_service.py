@@ -95,3 +95,68 @@ Keep it highly actionable and optimized for ATS systems. Do not include contact 
     async def get_by_id(self, resume_id: str, user_id: str):
         """Get a specific tailored resume."""
         return await self.resume_repo.get_resume_by_id(resume_id, user_id)
+
+    async def parse_resume(self, file_content: bytes, filename: str) -> dict:
+        """Parse resume content (PDF or Text) via Groq and return structured JSON."""
+        # Extract text from file
+        text = ""
+        if filename.lower().endswith(".pdf"):
+            try:
+                from pypdf import PdfReader
+                import io
+                reader = PdfReader(io.BytesIO(file_content))
+                for page in reader.pages:
+                    text += page.extract_text() or ""
+            except Exception as e:
+                logger.error(f"Failed to parse PDF {filename}: {e}")
+                raise ValueError("Could not parse PDF file. Ensure it is a valid PDF.")
+        else:
+            # Fallback to decoding as text
+            try:
+                text = file_content.decode("utf-8", errors="ignore")
+            except Exception as e:
+                logger.error(f"Failed to decode text file {filename}: {e}")
+                raise ValueError("Could not read file content. Ensure it is a text-based file.")
+
+        if not text.strip():
+            raise ValueError("Resume file is empty or no readable text was extracted.")
+
+        # Call Groq to parse
+        prompt = f"""
+Analyze the following resume text and extract key details:
+- Full Name
+- Email
+- Location
+- Current Degree, University, and Graduation Year (if student/recent grad)
+- Experience Level (number of years)
+- Preferred Roles (up to 4 matching roles)
+- Key Skills (up to 15 core technical or professional skills)
+- Preferences (remote preference like Remote, Onsite, Hybrid, or Any; preferred cities; salary expectations if mentioned)
+
+Output MUST be a JSON object with this exact structure:
+{{
+  "full_name": string or null,
+  "email": string or null,
+  "location": string or null,
+  "education": {{
+    "degree": string or null,
+    "university": string or null,
+    "graduation_year": integer or null
+  }},
+  "experience_years": integer or null,
+  "preferred_roles": [string],
+  "skills": [string],
+  "preferences": {{
+    "remote_preference": string or null,
+    "preferred_cities": [string],
+    "salary_expectations": string or null
+  }}
+}}
+
+Resume text:
+{text}
+"""
+        system_prompt = "You are a precise resume parser that extracts details and outputs ONLY valid JSON matching the requested schema."
+        parsed_data = await self.ai.generate_json(prompt, system_prompt=system_prompt)
+        return parsed_data
+

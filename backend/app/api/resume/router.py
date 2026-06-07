@@ -1,6 +1,6 @@
 """Resume Router - Resume tailoring endpoints."""
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from app.core.dependencies import get_current_user, check_rate_limit
 from app.core.security import AuthenticatedUser
 from app.services.resume_service import ResumeService
@@ -40,3 +40,28 @@ async def get_resume(resume_id: str, user: AuthenticatedUser = Depends(get_curre
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
     return resume
+
+
+@router.post("/parse")
+async def parse_user_resume(
+    file: UploadFile = File(...),
+    user: AuthenticatedUser = Depends(check_rate_limit),
+):
+    """
+    Parse uploaded resume file (PDF/Text) using Groq.
+    
+    Returns structured JSON of the parsed career details, skills, etc.
+    """
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No file uploaded")
+        
+    content = await file.read()
+    service = ResumeService()
+    try:
+        parsed_data = await service.parse_resume(content, file.filename)
+        return parsed_data
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal parser error: {str(e)}")
+

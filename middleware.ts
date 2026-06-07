@@ -50,6 +50,30 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/feed', request.url))
   }
 
+  // Onboarding Access Gate
+  if (user && !isE2E && !PUBLIC_PATHS.some(p => path.startsWith(p))) {
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('profile_completed')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      const isCompleted = profile?.profile_completed === true
+
+      if (!isCompleted && !path.startsWith('/onboarding')) {
+        return NextResponse.redirect(new URL('/onboarding', request.url))
+      }
+
+      if (isCompleted && path.startsWith('/onboarding')) {
+        return NextResponse.redirect(new URL('/feed', request.url))
+      }
+    } catch (e) {
+      // Gracefully handle db errors or missing columns by falling through
+      console.error('Middleware database check failed:', e)
+    }
+  }
+
   return response
 }
 

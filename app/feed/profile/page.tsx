@@ -76,24 +76,49 @@ export default function ProfilePage() {
     setTimeout(() => setToast(null), 3000)
   }
 
-  // Load profile from localStorage or fallback
+  // Load profile from Supabase with localStorage backup
   useEffect(() => {
     async function loadProfile() {
       try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data: dbProfile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle()
+
+          if (dbProfile) {
+            // Map DB profile to UI ProfileData
+            const uiProfile: ProfileData = {
+              name: dbProfile.full_name || user.email?.split('@')[0] || 'User',
+              title: dbProfile.preferred_roles?.[0] || 'Software Professional',
+              location: dbProfile.preferred_locations?.[0] || '',
+              experience: `${dbProfile.experience_years || 0} Years Exp.`,
+              avatarUrl: dbProfile.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256&h=256',
+              skills: dbProfile.skills || [],
+              softSkills: ['Teamwork', 'Communication', 'Problem Solving'],
+              preferredRoles: (dbProfile.preferred_roles || []).map((role: string) => ({
+                title: role,
+                skills: '',
+                type: 'Full-Time',
+                workplace: 'Remote'
+              })),
+              documents: dbProfile.resume_url ? [
+                { name: dbProfile.resume_url.split('/').pop() || 'Resume.pdf', size: 'Unknown Size', date: 'Uploaded' }
+              ] : []
+            }
+            setProfile(uiProfile)
+            localStorage.setItem('kareerly_profile', JSON.stringify(uiProfile))
+            return
+          }
+        }
+
+        // Fallback to localStorage if offline/no user
         const stored = localStorage.getItem('kareerly_profile')
         if (stored) {
           setProfile(JSON.parse(stored))
-        } else {
-          // Attempt to check if logged in and fetch email at least
-          const supabase = createClient()
-          const { data: { user } } = await supabase.auth.getUser()
-          if (user) {
-            setProfile(prev => ({
-              ...prev,
-              name: user.user_metadata?.full_name || prev.name,
-              avatarUrl: user.user_metadata?.avatar_url || prev.avatarUrl
-            }))
-          }
         }
       } catch (err) {
         console.error('Failed to load profile details', err)
@@ -104,10 +129,36 @@ export default function ProfilePage() {
     loadProfile()
   }, [])
 
-  // Save profile helper
-  const saveProfileData = (updated: ProfileData) => {
+  // Save profile helper and sync to Supabase
+  const saveProfileData = async (updated: ProfileData) => {
     setProfile(updated)
     localStorage.setItem('kareerly_profile', JSON.stringify(updated))
+
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const dbSkills = updated.skills
+        const dbRoles = updated.preferredRoles.map(r => r.title)
+        const dbLocations = updated.location ? [updated.location] : []
+        const matchExp = updated.experience.match(/(\d+)/)
+        const dbExp = matchExp ? parseInt(matchExp[1]) : 0
+
+        await supabase
+          .from('profiles')
+          .update({
+            full_name: updated.name,
+            skills: dbSkills,
+            preferred_roles: dbRoles,
+            experience_years: dbExp,
+            preferred_locations: dbLocations,
+            avatar_url: updated.avatarUrl
+          })
+          .eq('id', user.id)
+      }
+    } catch (e) {
+      console.error('Failed to sync profile update to Supabase:', e)
+    }
   }
 
   // Edit Profile Form Submit

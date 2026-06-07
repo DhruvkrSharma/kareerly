@@ -91,6 +91,7 @@ def create_app() -> FastAPI:
 
     # Register API routers
     from app.api.auth.router import router as auth_router
+    from app.api.profile.router import router as profile_router
     from app.api.jobs.router import router as jobs_router
     from app.api.resume.router import router as resume_router
     from app.api.matching.router import router as matching_router
@@ -100,6 +101,7 @@ def create_app() -> FastAPI:
     from app.api.analytics.router import router as analytics_router
 
     app.include_router(auth_router)
+    app.include_router(profile_router)
     app.include_router(jobs_router)
     app.include_router(resume_router)
     app.include_router(matching_router)
