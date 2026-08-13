@@ -1,12 +1,11 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const PUBLIC_PATHS = ['/auth/login', '/auth/callback', '/api']
+const PUBLIC_PATHS = ['/auth/login', '/auth/callback', '/auth/update-password', '/api']
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
 
-  // Let all API routes pass through without auth check
   if (path.startsWith('/api')) {
     return NextResponse.next({ request: { headers: request.headers } })
   }
@@ -39,8 +38,9 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Allow bypass for E2E testing
-  const isE2E = request.cookies.has('e2e-bypass')
+  const isE2E =
+    process.env.NODE_ENV !== 'production' &&
+    request.cookies.has('e2e-bypass')
 
   if (!user && !isE2E && !PUBLIC_PATHS.some(p => path.startsWith(p))) {
     return NextResponse.redirect(new URL('/auth/login', request.url))
@@ -50,7 +50,6 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/feed', request.url))
   }
 
-  // Onboarding Access Gate
   if (user && !isE2E && !PUBLIC_PATHS.some(p => path.startsWith(p))) {
     try {
       const { data: profile } = await supabase
@@ -69,8 +68,10 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL('/feed', request.url))
       }
     } catch (e) {
-      // Gracefully handle db errors or missing columns by falling through
       console.error('Middleware database check failed:', e)
+      if (!path.startsWith('/onboarding')) {
+        return NextResponse.redirect(new URL('/onboarding', request.url))
+      }
     }
   }
 
