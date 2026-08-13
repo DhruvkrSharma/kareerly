@@ -8,8 +8,13 @@ from pathlib import Path
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from dotenv import load_dotenv
+load_dotenv()
+
 from app.services.embedding_service import EmbeddingService
-from app.core.database import supabase_rpc, get_supabase_client
+from app.core.database import supabase_rpc, get_supabase_rest_headers
+from app.core.config import get_settings
+import httpx
 from eval.judge import evaluate_relevance_llm, compute_agreement
 from eval.metrics import ndcg_at_k, mrr, hit_rate_at_k
 
@@ -21,12 +26,16 @@ async def fetch_job_details(job_ids: list[int]) -> dict:
     """Fetches job details for a list of job IDs from Supabase."""
     if not job_ids:
         return {}
-    
-    supabase = get_supabase_client()
-    # Postgrest syntax: id.in.(1,2,3)
+    settings = get_settings()
     id_list = ",".join(map(str, job_ids))
-    res = supabase.table("jobs").select("*").in_("id", job_ids).execute()
-    return {j["id"]: j for j in res.data}
+    url = f"{settings.SUPABASE_URL}/rest/v1/jobs?id=in.({id_list})"
+    
+    async with httpx.AsyncClient() as client:
+        res = await client.get(url, headers=get_supabase_rest_headers())
+        res.raise_for_status()
+        data = res.json()
+        
+    return {j["id"]: j for j in data}
 
 async def run_evaluation():
     print("🚀 Starting Kareerly Retrieval Evaluation...")
