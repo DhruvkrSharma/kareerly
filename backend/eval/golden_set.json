@@ -1,0 +1,108 @@
+[
+  {
+    "profile_id": "user_1_go_backend",
+    "skills": ["Go", "PostgreSQL", "Kafka"],
+    "preferred_roles": ["Backend Engineer", "Senior Backend Engineer"],
+    "preferred_locations": ["Bengaluru", "Remote"],
+    "experience_years": 4,
+    "labeled_jobs": [
+      { "job_id": 18, "label": 1 },
+      { "job_id": 28, "label": 1 },
+      { "job_id": 46, "label": 1 },
+      { "job_id": 1, "label": 1 },
+      { "job_id": 22, "label": 0 }, 
+      { "job_id": 8, "label": 0 }
+    ]
+  },
+  {
+    "profile_id": "user_2_android",
+    "skills": ["Kotlin", "Jetpack Compose", "Coroutines"],
+    "preferred_roles": ["Android Engineer"],
+    "preferred_locations": ["Bengaluru"],
+    "experience_years": 2,
+    "labeled_jobs": [
+      { "job_id": 8, "label": 1 },
+      { "job_id": 31, "label": 1 },
+      { "job_id": 4, "label": 1 },
+      { "job_id": 44, "label": 1 },
+      { "job_id": 16, "label": 0 }
+    ]
+  },
+  {
+    "profile_id": "user_3_ml_python",
+    "skills": ["Python", "PyTorch", "TensorFlow"],
+    "preferred_roles": ["ML Engineer", "Data Scientist"],
+    "preferred_locations": ["Mumbai", "Remote"],
+    "experience_years": 3,
+    "labeled_jobs": [
+      { "job_id": 25, "label": 1 },
+      { "job_id": 5, "label": 1 },
+      { "job_id": 35, "label": 0 },
+      { "job_id": 2, "label": 1 }
+    ]
+  },
+  {
+    "profile_id": "user_4_designer",
+    "skills": ["Figma", "Design Systems", "Prototyping"],
+    "preferred_roles": ["Product Designer"],
+    "preferred_locations": ["Chennai"],
+    "experience_years": 5,
+    "labeled_jobs": [
+      { "job_id": 42, "label": 1 },
+      { "job_id": 12, "label": 0 },
+      { "job_id": 16, "label": 0 }
+    ]
+  },
+  {
+    "profile_id": "user_5_fullstack_intern",
+    "skills": ["React", "Node.js", "MongoDB"],
+    "preferred_roles": ["Full Stack Intern", "Software Engineering Intern"],
+    "preferred_locations": ["Bengaluru"],
+    "experience_years": 0,
+    "labeled_jobs": [
+      { "job_id": 16, "label": 1 },
+      { "job_id": 40, "label": 1 },
+      { "job_id": 18, "label": 0 }
+    ]
+  },
+  {
+    "profile_id": "user_6_ios",
+    "skills": ["Swift", "SwiftUI", "UIKit"],
+    "preferred_roles": ["iOS Engineer"],
+    "preferred_locations": ["Mumbai"],
+    "experience_years": 2,
+    "labeled_jobs": []
+  },
+  {
+    "profile_id": "user_7_platform",
+    "skills": ["Go", "Kubernetes", "Prometheus"],
+    "preferred_roles": ["Platform Engineer", "DevOps Engineer"],
+    "preferred_locations": ["Mumbai"],
+    "experience_years": 6,
+    "labeled_jobs": []
+  },
+  {
+    "profile_id": "user_8_data_analyst",
+    "skills": ["SQL", "Python", "Tableau"],
+    "preferred_roles": ["Data Analyst"],
+    "preferred_locations": ["Bengaluru"],
+    "experience_years": 1,
+    "labeled_jobs": []
+  },
+  {
+    "profile_id": "user_9_frontend",
+    "skills": ["React", "TypeScript", "Tailwind CSS"],
+    "preferred_roles": ["Frontend Engineer"],
+    "preferred_locations": ["Remote"],
+    "experience_years": 3,
+    "labeled_jobs": []
+  },
+  {
+    "profile_id": "user_10_backend_java",
+    "skills": ["Java", "Spring Boot", "MySQL"],
+    "preferred_roles": ["Backend Engineer"],
+    "preferred_locations": ["Noida"],
+    "experience_years": 4,
+    "labeled_jobs": []
+  }
+]
