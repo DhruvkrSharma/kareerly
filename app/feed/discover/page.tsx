@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { FeedStack } from '@/components/feed/SwipeCard'
 import { Toast } from '@/components/ui/Navigation'
 import { useRouter } from 'next/navigation'
+import { authFetch } from '@/lib/api'
 import type { FeedCard, SwipeAction } from '@/lib/types'
 
 export default function DiscoverPage() {
@@ -20,15 +21,11 @@ export default function DiscoverPage() {
     setTimeout(() => setToast(null), 3000)
   }
 
-  useEffect(() => {
-    fetchFeed()
-  }, [])
-
-  async function fetchFeed() {
+  const fetchFeed = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch('/api/feed')
+      const res = await authFetch('/api/feed')
       if (res.status === 401) { router.push('/auth/login'); return }
       if (!res.ok) throw new Error(`Error ${res.status}`)
       const json = await res.json()
@@ -39,7 +36,11 @@ export default function DiscoverPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [router])
+
+  useEffect(() => {
+    fetchFeed()
+  }, [fetchFeed])
 
   const handleSwipe = useCallback(async (cardIndex: number, action: SwipeAction) => {
     const card = cards[cardIndex]
@@ -54,7 +55,7 @@ export default function DiscoverPage() {
     if (action === 'apply' && card.apply_url) {
       window.open(card.apply_url, '_blank', 'noopener,noreferrer')
     }
-    fetch('/api/swipe', {
+    authFetch('/api/swipe', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

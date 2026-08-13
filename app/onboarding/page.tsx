@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { authFetch } from '@/lib/api'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -128,12 +129,8 @@ export default function OnboardingPage() {
     uploadData.append('file', file)
 
     try {
-      const token = (await supabase.auth.getSession()).data.session?.access_token
-      const response = await fetch('/api/resume/parse', {
+      const response = await authFetch('/api/resume/parse', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
         body: uploadData
       })
 
@@ -182,12 +179,10 @@ export default function OnboardingPage() {
     setError(null)
 
     try {
-      const token = (await supabase.auth.getSession()).data.session?.access_token
-      const response = await fetch('/api/profile/update', {
+      const response = await authFetch('/api/profile/update', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           full_name: formData.full_name,

@@ -16,8 +16,12 @@ const eslintConfig = [
       ".next/**",
       "out/**",
       "build/**",
-      "cloudflare-worker/**",
+      "cloudflare/**",
       "node_modules/**",
+      "backend/venv/**",
+      "backend/**",
+      "playwright-report/**",
+      "test-results/**",
     ],
   },
 ];

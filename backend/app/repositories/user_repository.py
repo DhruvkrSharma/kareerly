@@ -48,7 +48,17 @@ class UserRepository:
                         response = await client.patch(url, json=fallback_data, headers=headers)
                         if response.status_code == 200:
                             data = response.json()
-                            return data[0] if data else {}
+                            result = data[0] if data else {}
+                            onboarding_patch = {
+                                k: v for k, v in profile_data.items()
+                                if k in onboarding_cols
+                            }
+                            if onboarding_patch:
+                                try:
+                                    await client.patch(url, json=onboarding_patch, headers=headers)
+                                except Exception:
+                                    logger.warning("Could not persist onboarding columns separately")
+                            return result
                     except Exception as fallback_err:
                         logger.error(f"Fallback profile update also failed: {fallback_err}")
                 raise e

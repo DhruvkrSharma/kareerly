@@ -13,7 +13,7 @@ test.describe('Swipe Discover', () => {
           data: [{
             rec_id: 1,
             job_id: 101,
-            score: 90,
+            score: 0.9,
             title: 'Mock Swipe Job',
             company_name: 'Test Corp',
             location: 'Remote',

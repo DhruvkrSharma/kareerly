@@ -17,10 +17,29 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  webServer: {
-    command: 'npm run start',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 60 * 1000,
-  },
+  webServer: [
+    {
+      command: 'cd backend && python3 -m uvicorn app.main:app --host 127.0.0.1 --port 8000',
+      url: 'http://127.0.0.1:8000/health',
+      reuseExistingServer: !process.env.CI,
+      timeout: 120 * 1000,
+      env: {
+        SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://test.supabase.co',
+        SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'test-anon-key',
+        SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ?? 'test-service-key',
+        SUPABASE_JWT_SECRET: process.env.SUPABASE_JWT_SECRET ?? 'test-jwt-secret-that-is-long-enough',
+        GROQ_API_KEY: process.env.GROQ_API_KEY ?? 'test-groq-key',
+        ENVIRONMENT: 'test',
+      },
+    },
+    {
+      command: 'npm run start',
+      url: 'http://localhost:3000',
+      reuseExistingServer: !process.env.CI,
+      timeout: 120 * 1000,
+      env: {
+        FASTAPI_URL: 'http://127.0.0.1:8000',
+      },
+    },
+  ],
 });

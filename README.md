@@ -37,10 +37,15 @@ Create `.env.local` with the services you need:
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_JWT_SECRET=
 GROQ_API_KEY=
 HUGGINGFACE_API_KEY=
 SEED_USER_ID=
+FASTAPI_URL=http://127.0.0.1:8000
+NEXT_PUBLIC_DEMO_MODE=false
 ```
+
+For local demos with mock job cards when the database is empty, set `NEXT_PUBLIC_DEMO_MODE=true`.
 
 Run the development server:
 
@@ -66,7 +71,13 @@ npm run score    # generate recommendations for a seed user
 Run unit tests directly:
 
 ```bash
-npx vitest run tests/unit/ratelimit.test.ts
+npm test
+```
+
+Or a single file:
+
+```bash
+npx vitest run tests/unit/helpers.test.ts
 ```
 
 Run E2E tests after building:
@@ -80,9 +91,10 @@ npx playwright test
 
 As of the latest scan:
 
-- `npm run lint` passes with 7 warnings.
-- `npx vitest run tests/unit/ratelimit.test.ts` passes.
-- `npm run build` compiles, then fails type checking because `cloudflare/src/index.ts` references Cloudflare Worker types that are included in the Next.js TypeScript build.
-- Next.js warns that the `middleware.ts` convention is deprecated in favor of `proxy`.
+- `npm run lint` passes on app source (backend Python excluded from ESLint).
+- `npm test` runs Vitest helper/auth/score unit tests.
+- `npm run build` compiles when Cloudflare worker code is excluded from the app TypeScript project.
+- API routes proxy to FastAPI via `FASTAPI_URL` (defaults to `http://127.0.0.1:8000` locally).
+- Next.js warns that the `middleware.ts` convention is deprecated in favor of `proxy` — migrate when local Next docs are available for this version.
 
 See [Improvement plan](docs/IMPROVEMENT_PLAN.md) for prioritized fixes.

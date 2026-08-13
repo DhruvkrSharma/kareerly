@@ -6,6 +6,11 @@ import { Plus, MapPin, ExternalLink, Calendar, ArrowRight, Check, Wand2, X } fro
 import { Toast } from '@/components/ui/Navigation'
 import { useRouter } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
+import { authFetch } from '@/lib/api'
+import { scoreToPercent } from '@/lib/score'
+import { isDemoMode } from '@/lib/demo'
+
+type ColumnId = 'saved' | 'applied' | 'interviewing' | 'closed'
 
 interface KanbanCard {
   rec_id: number
@@ -20,14 +25,13 @@ interface KanbanCard {
   confidence: number
   tier: number
   swipe_action: 'save' | 'apply'
+  pipeline_stage?: ColumnId | null
   swiped_at: string
   apply_url: string
   skills: string[]
 }
 
-type ColumnId = 'saved' | 'applied' | 'interviewing' | 'closed'
-
-const MOCK_CARDS: KanbanCard[] = [
+const DEMO_CARDS: KanbanCard[] = [
   {
     rec_id: 101,
     job_id: 201,
@@ -37,7 +41,7 @@ const MOCK_CARDS: KanbanCard[] = [
     company_logo: null,
     location: 'Bengaluru · Hybrid',
     remote_ok: false,
-    score: 94,
+    score: 0.94,
     confidence: 0.9,
     tier: 1,
     swipe_action: 'save',
@@ -54,7 +58,7 @@ const MOCK_CARDS: KanbanCard[] = [
     company_logo: null,
     location: 'Remote',
     remote_ok: true,
-    score: 88,
+    score: 0.88,
     confidence: 0.85,
     tier: 2,
     swipe_action: 'save',
@@ -71,7 +75,7 @@ const MOCK_CARDS: KanbanCard[] = [
     company_logo: null,
     location: 'Mumbai',
     remote_ok: false,
-    score: 91,
+    score: 0.91,
     confidence: 0.88,
     tier: 1,
     swipe_action: 'apply',
@@ -84,8 +88,6 @@ const MOCK_CARDS: KanbanCard[] = [
 export default function KanbanPage() {
   const [cards, setCards] = useState<KanbanCard[]>([])
   const [loading, setLoading] = useState(true)
-  // Local stage overrides: maps rec_id -> ColumnId
-  const [stageOverrides, setStageOverrides] = useState<Record<number, ColumnId>>({})
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null)
   
   // Resume Tailoring States
@@ -101,22 +103,13 @@ export default function KanbanPage() {
   }
 
   useEffect(() => {
-    // Load overrides from localStorage
-    const savedOverrides = localStorage.getItem('kareerly-kanban-stages')
-    if (savedOverrides) {
-      try {
-        setStageOverrides(JSON.parse(savedOverrides))
-      } catch (e) {
-        console.error(e)
-      }
-    }
     fetchCards()
   }, [])
 
   async function fetchCards() {
     setLoading(true)
     try {
-      const res = await fetch('/api/saved')
+      const res = await authFetch('/api/saved')
       if (res.status === 401) {
         router.push('/auth/login')
         return
@@ -126,40 +119,42 @@ export default function KanbanPage() {
       
       if (json.data && json.data.length > 0) {
         setCards(json.data)
+      } else if (isDemoMode()) {
+        setCards(DEMO_CARDS)
       } else {
-        setCards(MOCK_CARDS)
+        setCards([])
       }
     } catch (err) {
       console.error(err)
-      setCards(MOCK_CARDS)
+      if (isDemoMode()) {
+        setCards(DEMO_CARDS)
+      } else {
+        setCards([])
+      }
     } finally {
       setLoading(false)
     }
   }
 
-  // Update card pipeline stage
   async function updateStage(recId: number, jobId: number, newStage: ColumnId) {
-    const updatedOverrides = { ...stageOverrides, [recId]: newStage }
-    setStageOverrides(updatedOverrides)
-    localStorage.setItem('kareerly-kanban-stages', JSON.stringify(updatedOverrides))
+    setCards(prev => prev.map(card =>
+      card.rec_id === recId ? { ...card, pipeline_stage: newStage } : card
+    ))
 
     showToast(`Moved to ${newStage.charAt(0).toUpperCase() + newStage.slice(1)}`)
 
-    // If moved to "applied", trigger database update
-    if (newStage === 'applied') {
-      try {
-        await fetch('/api/swipe', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            job_id: jobId,
-            rec_id: recId,
-            action: 'apply'
-          })
-        })
-      } catch (err) {
-        console.error(err)
-      }
+    try {
+      await authFetch('/api/pipeline-stage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rec_id: recId,
+          job_id: jobId,
+          stage: newStage,
+        }),
+      })
+    } catch (err) {
+      console.error(err)
     }
   }
 
@@ -177,7 +172,7 @@ export default function KanbanPage() {
 
     setIsTailoring(true)
     try {
-      const res = await fetch('/api/resume/tailor', {
+      const res = await authFetch('/api/resume/tailor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ job_id: jobId })
@@ -199,11 +194,9 @@ export default function KanbanPage() {
   // Group cards into columns
   const getColumnCards = (colId: ColumnId) => {
     return cards.filter(card => {
-      const override = stageOverrides[card.rec_id]
-      if (override) {
-        return override === colId
+      if (card.pipeline_stage) {
+        return card.pipeline_stage === colId
       }
-      // Defaults:
       if (colId === 'saved') return card.swipe_action === 'save'
       if (colId === 'applied') return card.swipe_action === 'apply'
       return false
@@ -291,7 +284,7 @@ export default function KanbanPage() {
                                 color: 'var(--primary-container)' 
                               }}
                             >
-                              {card.score}% match
+                              {scoreToPercent(card.score)}% match
                             </span>
                           </div>
                           

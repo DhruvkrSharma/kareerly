@@ -31,20 +31,15 @@ interface ProfileData {
 }
 
 const DEFAULT_PROFILE: ProfileData = {
-  name: 'Alex Chen',
-  title: 'Senior Frontend Engineer',
-  location: 'San Francisco, CA',
-  experience: '6 Years Exp.',
-  avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256&h=256',
-  skills: ['React.js', 'TypeScript', 'Tailwind CSS', 'Next.js', 'Node.js'],
-  softSkills: ['Agile/Scrum', 'Team Leadership', 'UI/UX Design', 'Technical Writing'],
-  preferredRoles: [
-    { title: 'Lead Frontend Engineer', skills: 'React, Vue, Architecture', type: 'Full-Time', workplace: 'Remote' },
-    { title: 'UI/UX Developer', skills: 'Design Systems, Tailwind CSS', type: 'Contract', workplace: 'Hybrid' }
-  ],
-  documents: [
-    { name: 'Alex_Chen_Resume_2024.pdf', size: '2.4 MB', date: '2 days ago' }
-  ]
+  name: '',
+  title: '',
+  location: '',
+  experience: '',
+  avatarUrl: '',
+  skills: [],
+  softSkills: [],
+  preferredRoles: [],
+  documents: [],
 }
 
 export default function ProfilePage() {

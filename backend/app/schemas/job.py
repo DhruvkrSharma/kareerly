@@ -39,6 +39,16 @@ class SwipeResponse(BaseModel):
     success: bool
 
 
+class PipelineStageRequest(BaseModel):
+    rec_id: int
+    job_id: int
+    stage: str = Field(..., pattern="^(saved|applied|interviewing|closed)$")
+
+
+class PipelineStageResponse(BaseModel):
+    success: bool
+
+
 class SavedJob(BaseModel):
     rec_id: int
     job_id: int
@@ -48,10 +58,11 @@ class SavedJob(BaseModel):
     company_logo: Optional[str] = None
     location: str = "India"
     remote_ok: bool = False
-    score: int = 0
+    score: float = 0.0
     confidence: float = 0.0
     tier: int = 3
     swipe_action: str
+    pipeline_stage: Optional[str] = None
     swiped_at: Optional[str] = None
     apply_url: str = "#"
     skills: list[str] = Field(default_factory=list)

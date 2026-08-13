@@ -15,9 +15,9 @@ from app.repositories.swipe_repository import SwipeRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.job import (
     FeedCard, FeedResponse, SwipeRequest, SwipeResponse,
+    PipelineStageRequest, PipelineStageResponse,
     SavedJob, SavedResponse, JobDetail,
 )
-import math
 
 router = APIRouter(prefix="/jobs", tags=["Jobs"])
 
@@ -120,16 +120,32 @@ async def get_bookmarks(user: AuthenticatedUser = Depends(check_rate_limit)):
             company_logo=company.get("logo_url"),
             location=job.get("location", "India"),
             remote_ok=job.get("remote_ok", False),
-            score=round(item.get("score", 0) * 100),
+            score=float(item.get("score", 0)),
             confidence=item.get("confidence", 0),
             tier=item.get("tier", 3),
             swipe_action=item.get("swipe_action", "save"),
+            pipeline_stage=item.get("pipeline_stage"),
             swiped_at=item.get("swiped_at"),
             apply_url=job.get("apply_url", "#"),
             skills=job.get("skills_required", []),
         ))
 
     return SavedResponse(data=formatted)
+
+
+@router.post("/pipeline-stage", response_model=PipelineStageResponse)
+async def update_pipeline_stage(
+    body: PipelineStageRequest,
+    user: AuthenticatedUser = Depends(check_rate_limit),
+):
+    """Persist Kanban pipeline stage for a saved recommendation."""
+    swipe_repo = SwipeRepository()
+    await swipe_repo.update_pipeline_stage(body.rec_id, user.id, body.stage)
+
+    if body.stage == "applied":
+        await swipe_repo.update_recommendation_swiped(body.rec_id, user.id, "apply")
+
+    return PipelineStageResponse(success=True)
 
 
 @router.get("/{job_id}", response_model=JobDetail)

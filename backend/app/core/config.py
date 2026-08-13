@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     # Groq AI
     GROQ_API_KEY: str
     GROQ_MODEL: str = "llama-3.3-70b-versatile"
-    GROQ_RESUME_MODEL: str = "llama3-8b-8192"
+    GROQ_RESUME_MODEL: str = "llama-3.1-8b-instant"
 
     # Embeddings
     EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"

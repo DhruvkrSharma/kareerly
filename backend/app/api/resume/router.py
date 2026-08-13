@@ -20,7 +20,10 @@ async def tailor_resume(
     Migrated from: POST /api/resume/tailor
     """
     service = ResumeService()
-    content = await service.tailor_resume(user.id, body.job_id)
+    try:
+        content = await service.tailor_resume(user.id, body.job_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     return ResumeTailorResponse(data=content)
 
 

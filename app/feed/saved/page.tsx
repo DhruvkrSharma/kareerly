@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bookmark, Briefcase, MapPin, Trash2, ExternalLink, Search, CheckCircle2, ChevronRight } from 'lucide-react'
+import { Bookmark, Briefcase, MapPin, Trash2, ExternalLink, Search, CheckCircle2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Toast } from '@/components/ui/Navigation'
+import { scoreToPercent } from '@/lib/score'
+import { isDemoMode } from '@/lib/demo'
 
 interface SavedJob {
   rec_id: number
@@ -23,7 +25,7 @@ interface SavedJob {
   skills: string[]
 }
 
-const MOCK_SAVED_JOBS: SavedJob[] = [
+const DEMO_SAVED_JOBS: SavedJob[] = [
   {
     rec_id: 101,
     job_id: 201,
@@ -32,7 +34,7 @@ const MOCK_SAVED_JOBS: SavedJob[] = [
     company_logo: null,
     location: 'Bengaluru · Hybrid',
     remote_ok: false,
-    score: 94,
+    score: 0.94,
     confidence: 0.9,
     tier: 1,
     swipe_action: 'save',
@@ -48,7 +50,7 @@ const MOCK_SAVED_JOBS: SavedJob[] = [
     company_logo: null,
     location: 'Remote',
     remote_ok: true,
-    score: 88,
+    score: 0.88,
     confidence: 0.85,
     tier: 2,
     swipe_action: 'save',
@@ -64,7 +66,7 @@ const MOCK_SAVED_JOBS: SavedJob[] = [
     company_logo: null,
     location: 'Mumbai',
     remote_ok: false,
-    score: 91,
+    score: 0.91,
     confidence: 0.88,
     tier: 1,
     swipe_action: 'apply',
@@ -94,7 +96,7 @@ export default function SavedPage() {
   async function fetchSaved() {
     setLoading(true)
     try {
-      const res = await fetch('/api/saved')
+      const res = await authFetch('/api/saved')
       if (res.status === 401) {
         router.push('/auth/login')
         return
@@ -104,13 +106,18 @@ export default function SavedPage() {
       
       if (json.data && json.data.length > 0) {
         setJobs(json.data)
+      } else if (isDemoMode()) {
+        setJobs(DEMO_SAVED_JOBS)
       } else {
-        // Fallback to mock data if db is empty
-        setJobs(MOCK_SAVED_JOBS)
+        setJobs([])
       }
     } catch (err) {
       console.error(err)
-      setJobs(MOCK_SAVED_JOBS) // Safe fallback
+      if (isDemoMode()) {
+        setJobs(DEMO_SAVED_JOBS)
+      } else {
+        setJobs([])
+      }
     } finally {
       setLoading(false)
     }
@@ -123,7 +130,7 @@ export default function SavedPage() {
     showToast('Job removed from list')
 
     try {
-      await fetch('/api/swipe', {
+      await authFetch('/api/swipe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -156,7 +163,7 @@ export default function SavedPage() {
     }))
 
     try {
-      await fetch('/api/swipe', {
+      await authFetch('/api/swipe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -254,7 +261,7 @@ export default function SavedPage() {
                 className="glass-card glass-card-hover p-6 flex flex-col justify-between relative overflow-hidden"
               >
                 {/* Background glow for Top Match */}
-                {job.score >= 90 && (
+                {scoreToPercent(job.score) >= 90 && (
                   <div 
                     className="absolute -top-10 -right-10 w-24 h-24 rounded-full opacity-5 blur-2xl pointer-events-none"
                     style={{ background: 'var(--primary-container)' }}
@@ -268,7 +275,7 @@ export default function SavedPage() {
                       className="w-12 h-12 rounded-xl flex items-center justify-center font-display font-black text-lg border border-outline-variant"
                       style={{ 
                         background: 'var(--surface-container-highest)', 
-                        color: job.score >= 90 ? 'var(--primary-container)' : 'var(--secondary)' 
+                        color: scoreToPercent(job.score) >= 90 ? 'var(--primary-container)' : 'var(--secondary)' 
                       }}
                     >
                       {job.company_name.charAt(0)}
@@ -283,7 +290,7 @@ export default function SavedPage() {
                           border: '1px solid color-mix(in srgb, var(--primary-container) 25%, transparent)'
                         }}
                       >
-                        {job.score}% match
+                        {scoreToPercent(job.score)}% match
                       </span>
                     </div>
                   </div>

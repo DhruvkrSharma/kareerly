@@ -6,9 +6,9 @@ can be swapped (Groq → OpenAI → local Ollama) without touching business logi
 The service handles prompt formatting, retries, and JSON parsing.
 """
 
+import asyncio
 from groq import Groq
 from app.core.config import get_settings
-from typing import Optional
 import json
 import logging
 
@@ -36,7 +36,8 @@ class AIService:
         messages.append({"role": "user", "content": prompt})
 
         try:
-            completion = self.client.chat.completions.create(
+            completion = await asyncio.to_thread(
+                self.client.chat.completions.create,
                 messages=messages,
                 model=model,
                 temperature=0.2,
@@ -60,7 +61,8 @@ class AIService:
         messages.append({"role": "user", "content": prompt})
 
         try:
-            completion = self.client.chat.completions.create(
+            completion = await asyncio.to_thread(
+                self.client.chat.completions.create,
                 messages=messages,
                 model=model,
                 temperature=0.2,

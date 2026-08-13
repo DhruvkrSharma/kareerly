@@ -17,6 +17,9 @@ from app.core.security import (
 from app.core.database import get_supabase_client, supabase_rpc
 from app.core.config import get_settings
 from supabase import Client
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 async def get_current_user(request: Request) -> AuthenticatedUser:
@@ -97,8 +100,15 @@ async def check_rate_limit(request: Request, user: AuthenticatedUser = Depends(g
             )
     except HTTPException:
         raise
-    except Exception:
-        # If rate limit check fails, allow request (fail-open)
+    except Exception as e:
+        settings = get_settings()
+        if settings.ENVIRONMENT in ("production", "staging"):
+            logger.error(f"Rate limit check failed in {settings.ENVIRONMENT}: {e}")
+            raise HTTPException(
+                status_code=503,
+                detail="Rate limiting service unavailable. Please try again shortly.",
+            )
+        # Fail-open in local/test environments only
         pass
 
     return user

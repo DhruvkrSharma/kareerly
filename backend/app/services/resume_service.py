@@ -9,11 +9,12 @@ from app.services.ai_service import AIService
 from app.repositories.resume_repository import ResumeRepository
 from app.repositories.user_repository import UserRepository
 from app.repositories.job_repository import JobRepository
+from app.core.config import get_settings
 import logging
 
 logger = logging.getLogger(__name__)
 
-MOCK_RESUME = """**ATS Match Analysis:** The candidate is a strong match (85%) with experience in React and Node.js. Missing explicit experience with GraphQL.
+DEMO_RESUME = """**ATS Match Analysis:** Demo mode — complete your profile for personalized output.
 
 **Professional Summary:** Full-stack engineer with 2+ years of experience building scalable web applications. Proven ability to deliver high-quality software in fast-paced environments.
 
@@ -43,13 +44,18 @@ class ResumeService:
         # Fetch profile and job
         profile = await self.user_repo.get_profile(user_id)
         job = await self.job_repo.get_job_by_id(job_id)
+        settings = get_settings()
+        demo_allowed = settings.ENVIRONMENT in ("development", "test")
 
         if not profile:
-            return MOCK_RESUME
+            if demo_allowed:
+                return DEMO_RESUME
+            raise ValueError("Profile not found. Complete onboarding before tailoring resumes.")
 
         if not job:
-            # Mock response for Kanban mock cards
-            return MOCK_RESUME
+            if demo_allowed:
+                return DEMO_RESUME
+            raise ValueError("Job not found.")
 
         # Generate with AI
         prompt = f"""
@@ -81,7 +87,10 @@ Keep it highly actionable and optimized for ATS systems. Do not include contact 
         content = await self.ai.generate_text(prompt, system_prompt=system)
 
         if not content:
-            content = MOCK_RESUME
+            if demo_allowed:
+                content = DEMO_RESUME
+            else:
+                raise ValueError("AI resume generation failed. Please try again later.")
 
         # Cache result
         await self.resume_repo.upsert_resume(user_id, job_id, content)

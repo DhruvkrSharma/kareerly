@@ -1,6 +1,0 @@
-name = "kareerly-api-gateway"
-main = "src/index.ts"
-compatibility_date = "2024-03-29"
-
-# [vars]
-# NEXT_PUBLIC_APP_URL = "https://kareerly.vercel.app"

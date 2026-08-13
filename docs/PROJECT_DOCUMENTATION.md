@@ -20,14 +20,15 @@ Generated or local artifacts include `node_modules/`, `.next/`, `playwright-repo
 
 ## Runtime Architecture
 
-Kareerly uses the Next.js App Router. Route handlers under `app/api/*` validate the current Supabase user, apply rate limiting, and read/write Supabase data.
+Kareerly uses the Next.js App Router. The frontend calls `/api/*` paths that are rewritten to the FastAPI backend (`FASTAPI_URL`, default `http://127.0.0.1:8000`). FastAPI validates Supabase JWTs, applies rate limiting, and reads/writes Supabase data.
 
 Core data-backed flows:
 
-- `/api/feed`: creates a user profile if missing, calls the `get_feed` RPC, and falls back to active jobs if no recommendations exist.
-- `/api/swipe`: records swipe events and marks recommendations as swiped.
-- `/api/saved`: reads saved/applied recommendations joined to jobs and companies.
-- `/api/resume/tailor`: reads profile and job data, generates markdown via Groq, and caches output in `tailored_resumes`.
+- `/api/feed` → `GET /jobs/feed`: personalized recommendations via `get_feed` RPC with active-job fallback.
+- `/api/swipe` → `POST /jobs/swipe`: records swipe events and updates recommendations.
+- `/api/saved` → `GET /jobs/bookmarks`: saved/applied jobs for Saved and Kanban views.
+- `/api/pipeline-stage` → `POST /jobs/pipeline-stage`: persists Kanban pipeline stages.
+- `/api/resume/tailor` → `POST /resume/tailor`: Groq-generated resume tailoring with Postgres cache.
 
 Main UI routes:
 
@@ -48,12 +49,10 @@ Supabase is the primary backend:
 - Jobs, companies, recommendations, profiles, swipe events, rate limits, and tailored resumes live in Postgres.
 - SQL migrations configure pgvector, tailored resume caching, score decay, and rate-limit RPCs.
 
-Local-only/demo persistence:
-
-- Profile edits are stored in `localStorage` under `kareerly_profile`.
-- Kanban stage overrides are stored in `localStorage` under `kareerly-kanban-stages`.
-- Generated resume markdown is also cached client-side by job ID.
-- Saved and Kanban pages fall back to mock jobs when the backend has no data or fails.
+- Profile edits are stored in Supabase (`profiles` table); the profile page also caches locally for offline viewing.
+- Kanban pipeline stages are stored in Supabase (`recommendations.pipeline_stage` via `007_pipeline_stage.sql`).
+- Generated resume markdown is cached client-side by job ID and server-side in `tailored_resumes`.
+- Saved and Kanban pages show demo cards only when `NEXT_PUBLIC_DEMO_MODE=true`.
 
 ## AI And Job Pipeline
 
@@ -68,15 +67,12 @@ The `002_pgvector_setup.sql` migration adds `vector(384)` columns and indexes fo
 
 ## Rate Limiting
 
-`lib/ratelimit.ts` calls the Supabase Edge Function at `/functions/v1/rate-limit`. The Edge Function invokes the `check_rate_limit` Postgres RPC from `005_rate_limits.sql`.
+FastAPI calls the Postgres `check_rate_limit()` RPC directly from `backend/app/core/dependencies.py`.
 
-Current behavior is fail-open:
+Current behavior:
 
-- Missing Supabase env vars disable app-side rate limiting.
-- Edge Function failures allow requests by default.
-- Missing Edge Function secrets allow requests.
-
-This is convenient locally but should be revisited before production hardening.
+- Missing rate-limit RPC failures fail **open** in development/test.
+- Production/staging environments fail **closed** with HTTP 503 when the rate-limit check is unavailable.
 
 ## Authentication
 
@@ -104,12 +100,7 @@ npx playwright test
 
 The app is configured for Vercel via `vercel.json` and normal Next.js deployment.
 
-There are two Cloudflare Worker folders:
-
-- `cloudflare/`: broader gateway/proxy with webhook auth and `/api/feed` caching.
-- `cloudflare-worker/`: narrower `/api/feed` cache proxy.
-
-Both use the same worker name, `kareerly-api-gateway`. Pick one source of truth before deploying a Worker.
+There is one Cloudflare Worker gateway in `cloudflare/` (pass-through proxy with webhook auth; **does not cache** personalized `/api/feed` responses).
 
 ## Required Environment Variables
 
@@ -117,6 +108,8 @@ Common app variables:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `FASTAPI_URL` (Next.js rewrite target for `/api/*`, e.g. Railway backend URL in production)
+- `NEXT_PUBLIC_DEMO_MODE` (set `true` to show demo job cards when DB is empty)
 
 Privileged script/function variables:
 
