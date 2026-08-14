@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { Toast } from '@/components/ui/Navigation'
 import { scoreToPercent } from '@/lib/score'
 import { isDemoMode } from '@/lib/demo'
+import { authFetch } from '@/lib/api'
 
 interface SavedJob {
   rec_id: number
