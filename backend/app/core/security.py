@@ -3,16 +3,34 @@ Kareerly FastAPI Backend - Security Layer
 
 JWT validation for Supabase Auth tokens.
 
-Interview Note: Supabase Auth issues standard JWTs signed with the project's
-JWT secret. We validate these server-side without calling Supabase Auth API,
-which means zero network latency for auth checks. The JWT contains the user's
-UUID in the 'sub' claim.
+Interview Note: Supabase Auth issues JWTs signed with ECC (P-256) keys.
+We validate these server-side by fetching the public key from Supabase's
+JWKS endpoint — zero shared secrets to manage. The JWKS client is cached
+globally so we don't re-fetch keys on every request. The JWT contains the
+user's UUID in the 'sub' claim.
 """
 
 import jwt
+from jwt import PyJWKClient
 from datetime import datetime, timezone
 from typing import Optional
 from app.core.config import get_settings
+
+# Module-level JWKS client cache — instantiated once, reused for all requests
+_jwks_client: Optional[PyJWKClient] = None
+
+
+def _get_jwks_client() -> PyJWKClient:
+    """
+    Returns a cached PyJWKClient that fetches signing keys from
+    Supabase's public JWKS endpoint.
+    """
+    global _jwks_client
+    if _jwks_client is None:
+        settings = get_settings()
+        jwks_url = f"{settings.SUPABASE_URL}/auth/v1/.well-known/jwks.json"
+        _jwks_client = PyJWKClient(jwks_url)
+    return _jwks_client
 
 
 class AuthError(Exception):
@@ -36,25 +54,22 @@ class AuthenticatedUser:
 def verify_supabase_token(token: str) -> AuthenticatedUser:
     """
     Validate a Supabase JWT and extract the user.
-    
+
     Supabase JWTs contain:
     - sub: user UUID
     - email: user email
     - role: 'authenticated' or 'anon'
     - exp: expiration timestamp
-    
-    The JWT is signed with the project's JWT secret (HS256).
+
+    Tokens are signed with ES256 (ECC P-256). The public key is fetched
+    from the project's JWKS endpoint and cached by PyJWKClient.
     """
-    settings = get_settings()
-
-    if not settings.SUPABASE_JWT_SECRET:
-        raise AuthError("SUPABASE_JWT_SECRET not configured")
-
     try:
+        signing_key = _get_jwks_client().get_signing_key_from_jwt(token)
         payload = jwt.decode(
             token,
-            settings.SUPABASE_JWT_SECRET,
-            algorithms=["HS256"],
+            signing_key.key,
+            algorithms=["ES256"],
             audience="authenticated",
         )
     except jwt.ExpiredSignatureError:
