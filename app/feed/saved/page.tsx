@@ -7,8 +7,6 @@ import { useRouter } from 'next/navigation'
 import { Toast } from '@/components/ui/Navigation'
 import { scoreToPercent } from '@/lib/score'
 import { isDemoMode } from '@/lib/demo'
-import { authFetch } from '@/lib/api'
-
 interface SavedJob {
   rec_id: number
   job_id: number
@@ -97,7 +95,7 @@ export default function SavedPage() {
   async function fetchSaved() {
     setLoading(true)
     try {
-      const res = await authFetch('/api/saved')
+      const res = await fetch('/api/saved')
       if (res.status === 401) {
         router.push('/auth/login')
         return
@@ -131,7 +129,7 @@ export default function SavedPage() {
     showToast('Job removed from list')
 
     try {
-      await authFetch('/api/swipe', {
+      await fetch('/api/swipe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -164,7 +162,7 @@ export default function SavedPage() {
     }))
 
     try {
-      await authFetch('/api/swipe', {
+      await fetch('/api/swipe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
